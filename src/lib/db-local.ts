@@ -23,9 +23,9 @@ const cloudConfig: PoolConfig = {
   password: "XBBtp7ltj3#5rH?i",
   port: 5432,
   ssl: {
-    ca: fs.readFileSync("/Users/utkarsh/Documents/GCSQL_server-ca.pem").toString(),
-    cert: fs.readFileSync("/Users/utkarsh/Documents/GCSQL_client-cert.pem").toString(),
-    key: fs.readFileSync("/Users/utkarsh/Documents/GCSQL_client-key.pem").toString(),
+    ca: fs.readFileSync("../../GCSQL_server-ca.pem").toString(),
+    cert: fs.readFileSync("../../GCSQL_client-cert.pem").toString(),
+    key: fs.readFileSync("../../GCSQL_client-key.pem").toString(),
     rejectUnauthorized: false
   },
   max: 20,
