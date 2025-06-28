@@ -1,5 +1,6 @@
 import { Pool, PoolConfig } from 'pg';
 import * as fs from 'fs';
+import * as path from 'path';
 
 const config: PoolConfig = {
   host: "35.232.27.6",  // ✅ same as your Python script
@@ -8,9 +9,9 @@ const config: PoolConfig = {
   password: "XBBtp7ltj3#5rH?i",
   port: 5432,
   ssl: {
-    ca: fs.readFileSync("/Users/utkarsh/Documents/GCSQL_server-ca.pem").toString(),
-    cert: fs.readFileSync("/Users/utkarsh/Documents/GCSQL_client-cert.pem").toString(),
-    key: fs.readFileSync("/Users/utkarsh/Documents/GCSQL_client-key.pem").toString(),
+    ca: fs.readFileSync(path.join(process.cwd(), "GCSQL_server-ca.pem")).toString(),
+    cert: fs.readFileSync(path.join(process.cwd(), "GCSQL_client-cert.pem")).toString(),
+    key: fs.readFileSync(path.join(process.cwd(), "GCSQL_client-key.pem")).toString(),
     rejectUnauthorized: false // ✅ same as sslmode='prefer' in psycopg2
   },
   max: 20,
