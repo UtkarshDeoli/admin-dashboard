@@ -33,9 +33,18 @@ export default function CompanyForm({ company, onSubmit, onClose }: CompanyFormP
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (company) {
-      onSubmit({ ...formData, company_no: company.company_no });
+      onSubmit({ 
+        ...formData, 
+        company_no: company.company_no,
+        created_at: company.created_at,
+        updated_at: new Date().toISOString().split('T')[0]
+      });
     } else {
-      onSubmit(formData);
+      onSubmit({
+        ...formData,
+        created_at: new Date().toISOString().split('T')[0],
+        updated_at: new Date().toISOString().split('T')[0]
+      });
     }
   };
 

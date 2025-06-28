@@ -38,11 +38,11 @@ const mockPeople: Person[] = [
 
 export default function PeopleManager() {
   const [people, setPeople] = useState<Person[]>(mockPeople);
-  const [editingPerson, setEditingPerson] = useState<Person | null>(null);
+  const [editingPerson, setEditingPerson] = useState<Person | undefined>(undefined);
   const [showForm, setShowForm] = useState(false);
 
   const handleCreate = () => {
-    setEditingPerson(null);
+    setEditingPerson(undefined);
     setShowForm(true);
   };
 
@@ -68,7 +68,7 @@ export default function PeopleManager() {
       setPeople([...people, newPerson]);
     }
     setShowForm(false);
-    setEditingPerson(null);
+    setEditingPerson(undefined);
   };
 
   const handleDelete = (peopleNo: number) => {
@@ -87,7 +87,7 @@ export default function PeopleManager() {
 
   const handleCancel = () => {
     setShowForm(false);
-    setEditingPerson(null);
+    setEditingPerson(undefined);
   };
 
   return (

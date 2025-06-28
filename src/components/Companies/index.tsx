@@ -14,6 +14,8 @@ const mockCompanies: Company[] = [
     fka: "ABC Films",
     acronym: "ABC",
     verified: true,
+    created_at: "2024-01-15",
+    updated_at: "2024-06-20"
   },
   {
     company_no: 2,
@@ -22,6 +24,8 @@ const mockCompanies: Company[] = [
     fka: "",
     acronym: "XYZ",
     verified: false,
+    created_at: "2024-02-10",
+    updated_at: "2024-06-15"
   },
   {
     company_no: 3,
@@ -30,6 +34,8 @@ const mockCompanies: Company[] = [
     fka: "Broadway Management",
     acronym: "BTI",
     verified: true,
+    created_at: "2024-03-05",
+    updated_at: "2024-06-22"
   },
 ];
 
@@ -124,8 +130,8 @@ export default function CompaniesManager() {
       {isFormOpen && (
         <CompanyForm
           company={editingCompany}
-          onSave={handleSaveCompany}
-          onCancel={() => {
+          onSubmit={handleSaveCompany}
+          onClose={() => {
             setIsFormOpen(false);
             setEditingCompany(null);
           }}

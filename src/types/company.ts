@@ -5,6 +5,8 @@ export interface Company {
   fka: string; // formerly known as
   acronym: string;
   verified: boolean;
+  created_at: string; // ISO date string
+  updated_at: string; // ISO date string
 }
 
 export interface Address {

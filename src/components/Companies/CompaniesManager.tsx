@@ -124,8 +124,8 @@ const CompaniesManager: React.FC = () => {
       {isFormOpen ? (
         <CompanyForm
           company={editingCompany}
-          onSave={handleSaveCompany}
-          onCancel={handleCancelForm}
+          onSubmit={handleSaveCompany}
+          onClose={handleCancelForm}
         />
       ) : (
         <CompanyList
