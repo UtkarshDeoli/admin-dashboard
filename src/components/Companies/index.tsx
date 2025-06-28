@@ -2,53 +2,36 @@
 
 import React, { useState, useEffect } from "react";
 import { Company } from "@/types/company";
+import { companiesAPI } from "@/lib/api";
 import CompanyList from "./CompanyList";
 import CompanyForm from "./CompanyForm";
 
-// Mock data - replace with API calls later
-const mockCompanies: Company[] = [
-  {
-    company_no: 1,
-    name: "ABC Productions",
-    description: "Leading film production company",
-    fka: "ABC Films",
-    acronym: "ABC",
-    verified: true,
-    created_at: "2024-01-15",
-    updated_at: "2024-06-20"
-  },
-  {
-    company_no: 2,
-    name: "XYZ Entertainment",
-    description: "Television and streaming content producer",
-    fka: "",
-    acronym: "XYZ",
-    verified: false,
-    created_at: "2024-02-10",
-    updated_at: "2024-06-15"
-  },
-  {
-    company_no: 3,
-    name: "Broadway Theaters Inc",
-    description: "Theater management and production",
-    fka: "Broadway Management",
-    acronym: "BTI",
-    verified: true,
-    created_at: "2024-03-05",
-    updated_at: "2024-06-22"
-  },
-];
 
 export default function CompaniesManager() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCompany, setEditingCompany] = useState<Company | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Simulate API call
-    setCompanies(mockCompanies);
+    loadCompanies();
   }, []);
+
+  const loadCompanies = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await companiesAPI.getAll();
+      setCompanies(data);
+    } catch (err) {
+      setError('Failed to load companies');
+      console.error('Error loading companies:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAddCompany = () => {
     setEditingCompany(null);
@@ -60,30 +43,34 @@ export default function CompaniesManager() {
     setIsFormOpen(true);
   };
 
-  const handleDeleteCompany = (companyNo: number) => {
+  const handleDeleteCompany = async (companyNo: number) => {
     if (window.confirm("Are you sure you want to delete this company?")) {
-      setCompanies(companies.filter(c => c.company_no !== companyNo));
+      try {
+        await companiesAPI.delete(companyNo);
+        await loadCompanies(); // Reload data after deletion
+      } catch (err) {
+        console.error('Error deleting company:', err);
+        alert('Failed to delete company');
+      }
     }
   };
 
-  const handleSaveCompany = (companyData: Omit<Company, 'company_no'>) => {
-    if (editingCompany) {
-      // Update existing company
-      setCompanies(companies.map(c => 
-        c.company_no === editingCompany.company_no 
-          ? { ...companyData, company_no: editingCompany.company_no }
-          : c
-      ));
-    } else {
-      // Add new company
-      const newCompany: Company = {
-        ...companyData,
-        company_no: Math.max(...companies.map(c => c.company_no), 0) + 1,
-      };
-      setCompanies([...companies, newCompany]);
+  const handleSaveCompany = async (companyData: Omit<Company, 'company_no' | 'created_at' | 'updated_at'>) => {
+    try {
+      if (editingCompany) {
+        // Update existing company
+        await companiesAPI.update(editingCompany.company_no, companyData);
+      } else {
+        // Create new company
+        await companiesAPI.create(companyData);
+      }
+      await loadCompanies(); // Reload data after save
+      setIsFormOpen(false);
+      setEditingCompany(null);
+    } catch (err) {
+      console.error('Error saving company:', err);
+      alert('Failed to save company');
     }
-    setIsFormOpen(false);
-    setEditingCompany(null);
   };
 
   const filteredCompanies = companies.filter(company =>

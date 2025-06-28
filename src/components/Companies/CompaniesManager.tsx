@@ -2,55 +2,41 @@
 
 import React, { useState, useEffect } from "react";
 import { Company } from "@/types/company";
-import CompanyList from "./CompanyList";
+import { companiesAPI } from "@/lib/api";
 import CompanyForm from "./CompanyForm";
-
-// Mock data for companies
-const mockCompanies: Company[] = [
-  {
-    company_no: 1,
-    name: "Tech Innovations Inc.",
-    description: "Leading technology solutions provider",
-    fka: "Tech Solutions Ltd.",
-    acronym: "TII",
-    verified: true,
-    created_at: "2024-01-15",
-    updated_at: "2024-06-20"
-  },
-  {
-    company_no: 2,
-    name: "Global Enterprises",
-    description: "International business consulting firm",
-    fka: "",
-    acronym: "GE",
-    verified: false,
-    created_at: "2024-02-10",
-    updated_at: "2024-06-15"
-  },
-  {
-    company_no: 3,
-    name: "Creative Studios",
-    description: "Digital marketing and design agency",
-    fka: "Creative Works",
-    acronym: "CS",
-    verified: true,
-    created_at: "2024-03-05",
-    updated_at: "2024-06-22"
-  }
-];
+import CompanyList from "./CompanyList";
 
 const CompaniesManager: React.FC = () => {
-  const [companies, setCompanies] = useState<Company[]>(mockCompanies);
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCompany, setEditingCompany] = useState<Company | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    loadCompanies();
+  }, []);
+
+  const loadCompanies = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await companiesAPI.getAll();
+      setCompanies(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load companies');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Filter companies based on search term
   const filteredCompanies = companies.filter(
     (company) =>
       company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      company.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      company.acronym.toLowerCase().includes(searchTerm.toLowerCase())
+      company.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      company.acronym?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleAddCompany = () => {
@@ -63,40 +49,46 @@ const CompaniesManager: React.FC = () => {
     setIsFormOpen(true);
   };
 
-  const handleDeleteCompany = (companyNo: number) => {
+  const handleDeleteCompany = async (companyNo: number) => {
     if (window.confirm("Are you sure you want to delete this company?")) {
-      setCompanies(companies.filter((c) => c.company_no !== companyNo));
+      try {
+        await companiesAPI.delete(companyNo);
+        await loadCompanies();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to delete company');
+      }
     }
   };
 
-  const handleSaveCompany = (companyData: Omit<Company, "company_no">) => {
-    if (editingCompany) {
-      // Update existing company
-      setCompanies(
-        companies.map((c) =>
-          c.company_no === editingCompany.company_no
-            ? { ...companyData, company_no: editingCompany.company_no }
-            : c
-        )
-      );
-    } else {
-      // Add new company
-      const newCompany: Company = {
-        ...companyData,
-        company_no: Math.max(...companies.map((c) => c.company_no)) + 1,
-        created_at: new Date().toISOString().split("T")[0],
-        updated_at: new Date().toISOString().split("T")[0],
-      };
-      setCompanies([...companies, newCompany]);
+  const handleSaveCompany = async (companyData: Omit<Company, "company_no" | "created_at" | "updated_at">) => {
+    try {
+      if (editingCompany) {
+        await companiesAPI.update(editingCompany.company_no, companyData);
+      } else {
+        await companiesAPI.create(companyData);
+      }
+      setIsFormOpen(false);
+      setEditingCompany(null);
+      await loadCompanies();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save company');
     }
-    setIsFormOpen(false);
-    setEditingCompany(null);
   };
 
   const handleCancelForm = () => {
     setIsFormOpen(false);
     setEditingCompany(null);
   };
+
+  if (loading) {
+    return (
+      <div className="rounded-sm border border-stroke bg-white px-5 pb-2.5 pt-6 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-sm border border-stroke bg-white px-5 pb-2.5 pt-6 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
@@ -120,6 +112,18 @@ const CompaniesManager: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {error && (
+        <div className="mb-4 rounded-sm border border-danger bg-danger bg-opacity-10 px-4 py-3 text-danger">
+          <p>{error}</p>
+          <button
+            onClick={() => setError(null)}
+            className="mt-2 text-sm underline hover:no-underline"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {isFormOpen ? (
         <CompanyForm

@@ -2,44 +2,34 @@
 
 import React, { useState, useEffect } from "react";
 import { Person } from "@/types/company";
+import { peopleAPI } from "@/lib/api";
 import PersonList from "./PersonList";
 import PersonForm from "./PersonForm";
 
-// Mock data
-const mockPeople: Person[] = [
-  {
-    people_no: 1,
-    first_name: "John",
-    middle_name: "Michael",
-    last_name: "Doe",
-    address_no: 1,
-    no_book: false,
-    archived: false,
-  },
-  {
-    people_no: 2,
-    first_name: "Jane",
-    middle_name: "",
-    last_name: "Smith",
-    address_no: 2,
-    no_book: true,
-    archived: false,
-  },
-  {
-    people_no: 3,
-    first_name: "Robert",
-    middle_name: "James",
-    last_name: "Johnson",
-    address_no: 1,
-    no_book: false,
-    archived: false,
-  },
-];
-
 export default function PeopleManager() {
-  const [people, setPeople] = useState<Person[]>(mockPeople);
+  const [people, setPeople] = useState<Person[]>([]);
   const [editingPerson, setEditingPerson] = useState<Person | undefined>(undefined);
   const [showForm, setShowForm] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadPeople();
+  }, []);
+
+  const loadPeople = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await peopleAPI.getAll();
+      setPeople(data);
+    } catch (err) {
+      setError('Failed to load people');
+      console.error('Error loading people:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleCreate = () => {
     setEditingPerson(undefined);
@@ -51,38 +41,55 @@ export default function PeopleManager() {
     setShowForm(true);
   };
 
-  const handleSave = (personData: Omit<Person, "people_no">) => {
-    if (editingPerson) {
-      // Update existing person
-      setPeople(people.map(person => 
-        person.people_no === editingPerson.people_no 
-          ? { ...personData, people_no: editingPerson.people_no }
-          : person
-      ));
-    } else {
-      // Create new person
-      const newPerson: Person = {
-        ...personData,
-        people_no: Math.max(...people.map(p => p.people_no)) + 1,
-      };
-      setPeople([...people, newPerson]);
+  const handleSave = async (personData: Omit<Person, "people_no">) => {
+    try {
+      if (editingPerson) {
+        // Update existing person
+        const updated = await peopleAPI.update(editingPerson.people_no, personData);
+        setPeople(people.map(person => 
+          person.people_no === editingPerson.people_no ? updated : person
+        ));
+      } else {
+        // Create new person
+        const newPerson = await peopleAPI.create(personData);
+        setPeople([...people, newPerson]);
+      }
+      setShowForm(false);
+      setEditingPerson(undefined);
+    } catch (err) {
+      console.error('Error saving person:', err);
+      alert('Failed to save person');
     }
-    setShowForm(false);
-    setEditingPerson(undefined);
   };
 
-  const handleDelete = (peopleNo: number) => {
+  const handleDelete = async (peopleNo: number) => {
     if (confirm("Are you sure you want to delete this person?")) {
-      setPeople(people.filter(person => person.people_no !== peopleNo));
+      try {
+        await peopleAPI.delete(peopleNo);
+        setPeople(people.filter(person => person.people_no !== peopleNo));
+      } catch (err) {
+        console.error('Error deleting person:', err);
+        alert('Failed to delete person');
+      }
     }
   };
 
-  const handleToggleArchive = (peopleNo: number) => {
-    setPeople(people.map(person =>
-      person.people_no === peopleNo
-        ? { ...person, archived: !person.archived }
-        : person
-    ));
+  const handleToggleArchive = async (peopleNo: number) => {
+    try {
+      const person = people.find(p => p.people_no === peopleNo);
+      if (person) {
+        const updated = await peopleAPI.update(peopleNo, {
+          ...person,
+          archived: !person.archived
+        });
+        setPeople(people.map(p =>
+          p.people_no === peopleNo ? updated : p
+        ));
+      }
+    } catch (err) {
+      console.error('Error toggling archive status:', err);
+      alert('Failed to update person');
+    }
   };
 
   const handleCancel = () => {
