@@ -14,7 +14,7 @@ const localConfig: PoolConfig = {
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 20000,
   keepAlive: true,
-};
+}; 
 
 const cloudConfig: PoolConfig = {
   host: "35.232.27.6",
