@@ -11,22 +11,15 @@ interface PersonListProps {
 }
 
 export default function PersonList({ people, onEdit, onDelete, onToggleArchive }: PersonListProps) {
-  const [searchTerm, setSearchTerm] = useState("");
   const [showArchived, setShowArchived] = useState(false);
 
   const filteredPeople = people.filter(person => {
-    const matchesSearch = 
-      person.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      person.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      person.middle_name.toLowerCase().includes(searchTerm.toLowerCase());
-    
     const matchesArchiveFilter = showArchived || !person.archived;
-    
-    return matchesSearch && matchesArchiveFilter;
+    return matchesArchiveFilter;
   });
 
   return (
-    <div className="rounded-sm border border-stroke bg-white px-5 pb-2.5 pt-6 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
+    <div>
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h4 className="text-xl font-semibold text-black dark:text-white">
@@ -43,25 +36,6 @@ export default function PersonList({ people, onEdit, onDelete, onToggleArchive }
             />
             <span className="text-sm text-black dark:text-white">Show Archived</span>
           </label>
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search people..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full rounded-lg border border-stroke bg-transparent px-4 py-2 pl-10 text-black outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
-            />
-            <span className="absolute left-3 top-2.5">
-              <svg
-                className="fill-current text-body dark:text-bodydark1"
-                width="20"
-                height="20"
-                viewBox="0 0 20 20"
-              >
-                <path d="M18.125 17.2l-4.4-4.4c1.2-1.4 1.9-3.2 1.9-5.2 0-4.4-3.6-8-8-8s-8 3.6-8 8 3.6 8 8 8c2 0 3.8-0.7 5.2-1.9l4.4 4.4c0.2 0.2 0.5 0.3 0.8 0.3s0.6-0.1 0.8-0.3c0.4-0.4 0.4-1.2 0-1.6zM2.625 7.6c0-3.3 2.7-6 6-6s6 2.7 6 6-2.7 6-6 6-6-2.7-6-6z"/>
-              </svg>
-            </span>
-          </div>
         </div>
       </div>
 
@@ -128,14 +102,22 @@ export default function PersonList({ people, onEdit, onDelete, onToggleArchive }
                       title="Edit"
                     >
                       <svg
-                        className="fill-current"
-                        width="18"
-                        height="18"
-                        viewBox="0 0 18 18"
-                      >
-                        <path d="M16.8754 11.6719C16.5379 11.6719 16.2285 11.9531 16.2285 12.3187V14.8219C16.2285 15.075 16.0316 15.2719 15.7785 15.2719H2.22227C1.96914 15.2719 1.77227 15.075 1.77227 14.8219V12.3187C1.77227 11.9812 1.49102 11.6719 1.12539 11.6719C0.759766 11.6719 0.478516 11.9531 0.478516 12.3187V14.8219C0.478516 15.7781 1.23789 16.5375 2.19414 16.5375H15.7785C16.7348 16.5375 17.4941 15.7781 17.4941 14.8219V12.3187C17.5223 11.9531 17.2129 11.6719 16.8754 11.6719Z"/>
-                        <path d="M8.55074 12.3469C8.66324 12.4594 8.83199 12.5156 9.00074 12.5156C9.16949 12.5156 9.31012 12.4594 9.45074 12.3469L13.4726 8.43752C13.7257 8.1844 13.7257 7.79065 13.5007 7.53752C13.2476 7.2844 12.8539 7.2844 12.6007 7.5094L9.64762 10.4063V2.1094C9.64762 1.7719 9.36637 1.46252 9.00074 1.46252C8.63512 1.46252 8.35387 1.74377 8.35387 2.1094V10.4063L5.40074 7.53752C5.14762 7.2844 4.75387 7.31252 4.50074 7.56565C4.24762 7.81877 4.27574 8.21252 4.52887 8.46565L8.55074 12.3469Z"/>
-                      </svg>
+                      className="fill-current"
+                      width="18"
+                      height="18"
+                      viewBox="0 0 18 18"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M8.99981 14.8219C3.43106 14.8219 0.674805 9.50624 0.562305 9.28124C0.47793 9.11249 0.47793 8.88749 0.562305 8.71874C0.674805 8.49374 3.43106 3.20624 8.99981 3.20624C14.5686 3.20624 17.3248 8.49374 17.4373 8.71874C17.5217 8.88749 17.5217 9.11249 17.4373 9.28124C17.3248 9.50624 14.5686 14.8219 8.99981 14.8219ZM1.85605 8.99999C2.4748 10.0406 4.89356 13.5562 8.99981 13.5562C13.1061 13.5562 15.5248 10.0406 16.1436 8.99999C15.5248 7.95936 13.1061 4.44374 8.99981 4.44374C4.89356 4.44374 2.4748 7.95936 1.85605 8.99999Z"
+                        fill=""
+                      />
+                      <path
+                        d="M9 11.3906C7.67812 11.3906 6.60938 10.3219 6.60938 9C6.60938 7.67813 7.67812 6.60938 9 6.60938C10.3219 6.60938 11.3906 7.67813 11.3906 9C11.3906 10.3219 10.3219 11.3906 9 11.3906ZM9 7.875C8.38125 7.875 7.875 8.38125 7.875 9C7.875 9.61875 8.38125 10.125 9 10.125C9.61875 10.125 10.125 9.61875 10.125 9C10.125 8.38125 9.61875 7.875 9 7.875Z"
+                        fill=""
+                      />
+                    </svg>
                     </button>
                     <button
                       onClick={() => onToggleArchive(person.people_no)}
@@ -179,7 +161,7 @@ export default function PersonList({ people, onEdit, onDelete, onToggleArchive }
       {filteredPeople.length === 0 && (
         <div className="py-10 text-center">
           <p className="text-gray-500 dark:text-gray-400">
-            {searchTerm ? "No people found matching your search." : "No people yet."}
+            No people found.
           </p>
         </div>
       )}

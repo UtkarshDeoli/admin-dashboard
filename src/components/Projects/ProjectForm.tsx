@@ -75,22 +75,34 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSave, onCancel }) 
     }));
   };
 
-  const projectTypes = ['Theater', 'Film', 'TV', 'Commercial', 'Web Series', 'Music Video', 'Other'];
-  const castingStatuses = ['Open', 'Closed', 'In Progress', 'On Hold', 'Completed'];
-  const unions = ['AEA', 'SAG-AFTRA', 'Non-Union', 'Other'];
+  const projectTypes = ['TV', 'Film', 'Broadway', 'Off-Broadway', 'Development', 'New Media', 'Tour', 'Regional Theatre'];
+  const castingStatuses = ['TBA', 'Casting', 'Shooting', 'Wrapped', 'Ongoing', 'Casting & Shooting', 'Development'];
+  const genres = ['action', 'adventure', 'animation', 'biography', 'comedy', 'crime', 'documentary', 'drama', 'family', 'fantasy', 'history', 'horror', 'musical', 'mystery', 'romance', 'sci_fi', 'thriller', 'war', 'western', 'reality', 'talk_show', 'game_show', 'film_noir', 'experimental'];
+
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <h2 className="text-xl font-semibold mb-4">
-          {project ? 'Edit Project' : 'Add Project'}
-        </h2>
+      <div className="bg-white dark:bg-boxdark rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-6 border-b border-stroke pb-5 dark:border-strokedark">
+          <h2 className="text-xl font-semibold text-black dark:text-white">
+            {project ? 'Edit Project' : 'Add Project'}
+          </h2>
+          <button 
+            onClick={onCancel}
+            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white"
+            aria-label="Close"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Project Name *
+              <label className="mb-3 block text-sm font-medium text-black dark:text-white">
+                Project Name <span className="text-meta-1">*</span>
               </label>
               <input
                 type="text"
@@ -98,12 +110,13 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSave, onCancel }) 
                 value={formData.name}
                 onChange={handleChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter project name"
+                className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="mb-3 block text-sm font-medium text-black dark:text-white">
                 Also Known As (AKA)
               </label>
               <input
@@ -111,12 +124,13 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSave, onCancel }) 
                 name="aka"
                 value={formData.aka}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter AKA"
+                className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="mb-3 block text-sm font-medium text-black dark:text-white">
                 Formerly Known As (FKA)
               </label>
               <input
@@ -124,20 +138,21 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSave, onCancel }) 
                 name="fka"
                 value={formData.fka}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter FKA"
+                className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Type *
+              <label className="mb-3 block text-sm font-medium text-black dark:text-white">
+                Type <span className="text-meta-1">*</span>
               </label>
               <select
                 name="type"
                 value={formData.type}
                 onChange={handleChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
               >
                 <option value="">Select Type</option>
                 {projectTypes.map(type => (
@@ -147,27 +162,31 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSave, onCancel }) 
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Genre
+              <label className="mb-3 block text-sm font-medium text-black dark:text-white">
+              Genre
               </label>
-              <input
-                type="text"
-                name="genre"
-                value={formData.genre}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+              <select
+              name="genre"
+              value={formData.genre}
+              onChange={handleChange}
+              className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+              >
+              <option value="">Select Genre</option>
+              {genres.map(genre => (
+                <option key={genre} value={genre}>{genre}</option>
+              ))}
+              </select>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="mb-3 block text-sm font-medium text-black dark:text-white">
                 Casting Status
               </label>
               <select
                 name="casting_status"
                 value={formData.casting_status}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
               >
                 {castingStatuses.map(status => (
                   <option key={status} value={status}>{status}</option>
@@ -176,24 +195,21 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSave, onCancel }) 
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="mb-3 block text-sm font-medium text-black dark:text-white">
                 Union
               </label>
-              <select
+                <input
+                type="text"
                 name="union"
                 value={formData.union}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Select Union</option>
-                {unions.map(union => (
-                  <option key={union} value={union}>{union}</option>
-                ))}
-              </select>
+                placeholder="Enter Union"
+                className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="mb-3 block text-sm font-medium text-black dark:text-white">
                 Start Date
               </label>
               <input
@@ -201,12 +217,12 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSave, onCancel }) 
                 name="start_date"
                 value={formData.start_date}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="mb-3 block text-sm font-medium text-black dark:text-white">
                 End Date
               </label>
               <input
@@ -214,13 +230,13 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSave, onCancel }) 
                 name="end_date"
                 value={formData.end_date}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="mb-3 block text-sm font-medium text-black dark:text-white">
               Description
             </label>
             <textarea
@@ -228,13 +244,14 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSave, onCancel }) 
               value={formData.description}
               onChange={handleChange}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter project description"
+              className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="mb-3 block text-sm font-medium text-black dark:text-white">
                 Primary Location
               </label>
               <div className="grid grid-cols-3 gap-2">
@@ -244,7 +261,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSave, onCancel }) 
                   value={formData.city1}
                   onChange={handleChange}
                   placeholder="City"
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
                 />
                 <input
                   type="text"
@@ -252,7 +269,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSave, onCancel }) 
                   value={formData.state1}
                   onChange={handleChange}
                   placeholder="State"
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
                 />
                 <input
                   type="text"
@@ -260,13 +277,13 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSave, onCancel }) 
                   value={formData.country1}
                   onChange={handleChange}
                   placeholder="Country"
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="mb-3 block text-sm font-medium text-black dark:text-white">
                 Secondary Location
               </label>
               <div className="grid grid-cols-3 gap-2">
@@ -276,7 +293,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSave, onCancel }) 
                   value={formData.city2}
                   onChange={handleChange}
                   placeholder="City"
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
                 />
                 <input
                   type="text"
@@ -284,7 +301,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSave, onCancel }) 
                   value={formData.state2}
                   onChange={handleChange}
                   placeholder="State"
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
                 />
                 <input
                   type="text"
@@ -292,7 +309,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSave, onCancel }) 
                   value={formData.country2}
                   onChange={handleChange}
                   placeholder="Country"
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
                 />
               </div>
             </div>
@@ -305,9 +322,9 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSave, onCancel }) 
                 name="musical"
                 checked={formData.musical}
                 onChange={handleChange}
-                className="mr-2"
+                className="mr-2 h-5 w-5 rounded-sm border-stroke bg-transparent text-primary checked:bg-primary dark:border-strokedark"
               />
-              <span className="text-sm text-gray-700">Musical</span>
+              <span className="text-sm text-black dark:text-white">Musical</span>
             </label>
 
             <label className="flex items-center">
@@ -316,9 +333,9 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSave, onCancel }) 
                 name="publish"
                 checked={formData.publish}
                 onChange={handleChange}
-                className="mr-2"
+                className="mr-2 h-5 w-5 rounded-sm border-stroke bg-transparent text-primary checked:bg-primary dark:border-strokedark"
               />
-              <span className="text-sm text-gray-700">Publish</span>
+              <span className="text-sm text-black dark:text-white">Publish</span>
             </label>
 
             <label className="flex items-center">
@@ -327,23 +344,23 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSave, onCancel }) 
                 name="archived"
                 checked={formData.archived}
                 onChange={handleChange}
-                className="mr-2"
+                className="mr-2 h-5 w-5 rounded-sm border-stroke bg-transparent text-primary checked:bg-primary dark:border-strokedark"
               />
-              <span className="text-sm text-gray-700">Archived</span>
+              <span className="text-sm text-black dark:text-white">Archived</span>
             </label>
           </div>
 
-          <div className="flex justify-end space-x-2 pt-4">
+          <div className="flex justify-end space-x-3 pt-6">
             <button
               type="button"
               onClick={onCancel}
-              className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+              className="flex justify-center rounded border border-stroke py-2 px-6 font-medium text-black hover:shadow-1 dark:border-strokedark dark:text-white"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              className="flex justify-center rounded bg-primary py-2 px-6 font-medium text-gray hover:bg-opacity-90"
             >
               {project ? 'Update' : 'Create'}
             </button>
