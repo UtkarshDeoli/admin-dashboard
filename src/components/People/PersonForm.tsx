@@ -51,105 +51,151 @@ const PersonForm: React.FC<PersonFormProps> = ({ person, onSave, onCancel }) => 
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-        <h2 className="text-xl font-semibold mb-4">
-          {person ? 'Edit Person' : 'Add Person'}
-        </h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white p-6 shadow-xl dark:bg-boxdark">
+        <div className="mb-6 flex items-center justify-between">
+          <h3 className="text-xl font-semibold text-black dark:text-white">
+            {person ? 'Edit Person' : 'Add New Person'}
+          </h3>
+          <button
+            onClick={onCancel}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              First Name *
-            </label>
-            <input
-              type="text"
-              name="first_name"
-              value={formData.first_name}
-              onChange={handleChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Middle Name
-            </label>
-            <input
-              type="text"
-              name="middle_name"
-              value={formData.middle_name}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Last Name *
-            </label>
-            <input
-              type="text"
-              name="last_name"
-              value={formData.last_name}
-              onChange={handleChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Address Number
-            </label>
-            <input
-              type="number"
-              name="address_no"
-              value={formData.address_no}
-              onChange={handleChange}
-              min="0"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div className="flex items-center space-x-4">
-            <label className="flex items-center">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div>
+              <label className="mb-2.5 block text-sm font-medium text-black dark:text-white">
+                First Name <span className="text-meta-1">*</span>
+              </label>
               <input
-                type="checkbox"
-                name="no_book"
-                checked={formData.no_book}
+                type="text"
+                name="first_name"
+                value={formData.first_name}
                 onChange={handleChange}
-                className="mr-2"
+                required
+                placeholder="Enter first name"
+                className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
               />
-              <span className="text-sm text-gray-700">No Book</span>
+            </div>
+
+            <div>
+              <label className="mb-2.5 block text-sm font-medium text-black dark:text-white">
+                Middle Name
+              </label>
+              <input
+                type="text"
+                name="middle_name"
+                value={formData.middle_name}
+                onChange={handleChange}
+                placeholder="Enter middle name"
+                className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2.5 block text-sm font-medium text-black dark:text-white">
+                Last Name <span className="text-meta-1">*</span>
+              </label>
+              <input
+                type="text"
+                name="last_name"
+                value={formData.last_name}
+                onChange={handleChange}
+                required
+                placeholder="Enter last name"
+                className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2.5 block text-sm font-medium text-black dark:text-white">
+                Address Number
+              </label>
+              <input
+                type="number"
+                name="address_no"
+                value={formData.address_no}
+                onChange={handleChange}
+                min="0"
+                placeholder="Enter address number"
+                className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-4 sm:flex-row sm:gap-8">
+            <label className="flex cursor-pointer select-none items-center text-sm font-medium text-black dark:text-white">
+              <div className="relative">
+                <input
+                  type="checkbox"
+                  name="no_book"
+                  checked={formData.no_book}
+                  onChange={handleChange}
+                  className="sr-only"
+                />
+                <div
+                  className={`mr-4 flex h-5 w-5 items-center justify-center rounded border ${
+                    formData.no_book
+                      ? "border-primary bg-gray dark:bg-transparent"
+                      : "border-stroke dark:border-strokedark"
+                  }`}
+                >
+                  <span
+                    className={`h-2.5 w-2.5 rounded-sm ${
+                      formData.no_book ? "bg-primary" : ""
+                    }`}
+                  ></span>
+                </div>
+              </div>
+              No Book
             </label>
 
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                name="archived"
-                checked={formData.archived}
-                onChange={handleChange}
-                className="mr-2"
-              />
-              <span className="text-sm text-gray-700">Archived</span>
+            <label className="flex cursor-pointer select-none items-center text-sm font-medium text-black dark:text-white">
+              <div className="relative">
+                <input
+                  type="checkbox"
+                  name="archived"
+                  checked={formData.archived}
+                  onChange={handleChange}
+                  className="sr-only"
+                />
+                <div
+                  className={`mr-4 flex h-5 w-5 items-center justify-center rounded border ${
+                    formData.archived
+                      ? "border-primary bg-gray dark:bg-transparent"
+                      : "border-stroke dark:border-strokedark"
+                  }`}
+                >
+                  <span
+                    className={`h-2.5 w-2.5 rounded-sm ${
+                      formData.archived ? "bg-primary" : ""
+                    }`}
+                  ></span>
+                </div>
+              </div>
+              Archived
             </label>
           </div>
 
-          <div className="flex justify-end space-x-2 pt-4">
+          <div className="flex justify-end space-x-4 pt-6">
             <button
               type="button"
               onClick={onCancel}
-              className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+              className="rounded-md border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              className="rounded-md bg-primary px-4 py-2 text-white hover:bg-opacity-90"
             >
-              {person ? 'Update' : 'Create'}
+              {person ? 'Update Person' : 'Add Person'}
             </button>
           </div>
         </form>

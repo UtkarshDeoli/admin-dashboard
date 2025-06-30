@@ -104,12 +104,12 @@ const CompaniesManager: React.FC = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary sm:w-80"
           />
-          <button
+            <button
             onClick={handleAddCompany}
-            className="flex justify-center rounded bg-primary px-6 py-2 font-medium text-gray hover:bg-opacity-90"
-          >
+            className="flex items-center justify-center rounded bg-primary px-6 py-2 font-medium text-gray hover:bg-opacity-90"
+            >
             Add Company
-          </button>
+            </button>
         </div>
       </div>
 

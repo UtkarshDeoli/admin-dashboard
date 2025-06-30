@@ -12,10 +12,19 @@ export default function PeopleManager() {
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     loadPeople();
   }, []);
+
+  // Filter people based on search term
+  const filteredPeople = people.filter(
+    (person) =>
+      person.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      person.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      person.middle_name?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const loadPeople = async () => {
     try {
@@ -45,20 +54,16 @@ export default function PeopleManager() {
     try {
       if (editingPerson) {
         // Update existing person
-        const updated = await peopleAPI.update(editingPerson.people_no, personData);
-        setPeople(people.map(person => 
-          person.people_no === editingPerson.people_no ? updated : person
-        ));
+        await peopleAPI.update(editingPerson.people_no, personData);
       } else {
         // Create new person
-        const newPerson = await peopleAPI.create(personData);
-        setPeople([...people, newPerson]);
+        await peopleAPI.create(personData);
       }
       setShowForm(false);
       setEditingPerson(undefined);
+      await loadPeople();
     } catch (err) {
-      console.error('Error saving person:', err);
-      alert('Failed to save person');
+      setError(err instanceof Error ? err.message : 'Failed to save person');
     }
   };
 
@@ -66,10 +71,9 @@ export default function PeopleManager() {
     if (confirm("Are you sure you want to delete this person?")) {
       try {
         await peopleAPI.delete(peopleNo);
-        setPeople(people.filter(person => person.people_no !== peopleNo));
+        await loadPeople();
       } catch (err) {
-        console.error('Error deleting person:', err);
-        alert('Failed to delete person');
+        setError(err instanceof Error ? err.message : 'Failed to delete person');
       }
     }
   };
@@ -78,17 +82,14 @@ export default function PeopleManager() {
     try {
       const person = people.find(p => p.people_no === peopleNo);
       if (person) {
-        const updated = await peopleAPI.update(peopleNo, {
+        await peopleAPI.update(peopleNo, {
           ...person,
           archived: !person.archived
         });
-        setPeople(people.map(p =>
-          p.people_no === peopleNo ? updated : p
-        ));
+        await loadPeople();
       }
     } catch (err) {
-      console.error('Error toggling archive status:', err);
-      alert('Failed to update person');
+      setError(err instanceof Error ? err.message : 'Failed to update person');
     }
   };
 
@@ -97,19 +98,50 @@ export default function PeopleManager() {
     setEditingPerson(undefined);
   };
 
-  return (
-    <div className="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10">
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-title-md2 font-semibold text-black dark:text-white">
-          People Management
-        </h2>
-        <button
-          onClick={handleCreate}
-          className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-center font-medium text-white hover:bg-opacity-90"
-        >
-          Add New Person
-        </button>
+  if (loading) {
+    return (
+      <div className="rounded-sm border border-stroke bg-white px-5 pb-2.5 pt-6 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+        </div>
       </div>
+    );
+  }
+
+  return (
+    <div className="rounded-sm border border-stroke bg-white px-5 pb-2.5 pt-6 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h4 className="text-xl font-semibold text-black dark:text-white">
+          People Management
+        </h4>
+        <div className="flex gap-3">
+          <input
+            type="text"
+            placeholder="Search people..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary sm:w-80"
+          />
+          <button
+            onClick={handleCreate}
+            className="flex items-center justify-center rounded bg-primary px-6 py-2 font-medium text-gray hover:bg-opacity-90"
+          >
+            Add Person
+          </button>
+        </div>
+      </div>
+
+      {error && (
+        <div className="mb-4 rounded-sm border border-danger bg-danger bg-opacity-10 px-4 py-3 text-danger">
+          <p>{error}</p>
+          <button
+            onClick={() => setError(null)}
+            className="mt-2 text-sm underline hover:no-underline"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {showForm ? (
         <PersonForm
@@ -119,7 +151,7 @@ export default function PeopleManager() {
         />
       ) : (
         <PersonList
-          people={people}
+          people={filteredPeople}
           onEdit={handleEdit}
           onDelete={handleDelete}
           onToggleArchive={handleToggleArchive}
