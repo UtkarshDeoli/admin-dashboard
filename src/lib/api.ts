@@ -169,3 +169,36 @@ export const projectsAPI = {
     if (!response.ok) throw new Error('Failed to delete project');
   },
 };
+
+// Stats API
+export const statsAPI = {
+  getAll: async () => {
+    const response = await fetch(`${API_BASE_URL}/api/stats`);
+    if (!response.ok) throw new Error('Failed to fetch stats');
+    return response.json();
+  },
+
+  getCompanyCount: async () => {
+    const response = await fetch(`${API_BASE_URL}/api/companies/count`);
+    if (!response.ok) throw new Error('Failed to fetch company count');
+    return response.json();
+  },
+
+  getAddressCount: async () => {
+    const response = await fetch(`${API_BASE_URL}/api/addresses/count`);
+    if (!response.ok) throw new Error('Failed to fetch address count');
+    return response.json();
+  },
+
+  getPeopleCount: async () => {
+    const response = await fetch(`${API_BASE_URL}/api/people/count`);
+    if (!response.ok) throw new Error('Failed to fetch people count');
+    return response.json();
+  },
+
+  getProjectCount: async () => {
+    const response = await fetch(`${API_BASE_URL}/api/projects/count`);
+    if (!response.ok) throw new Error('Failed to fetch project count');
+    return response.json();
+  },
+};
