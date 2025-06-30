@@ -43,14 +43,8 @@ export default function AddressForm({ address, onSave, onCancel }: AddressFormPr
   };
 
   return (
-    <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-      <div className="border-b border-stroke px-6.5 py-4 dark:border-strokedark">
-        <h3 className="font-medium text-black dark:text-white">
-          {address ? "Edit Address" : "Add New Address"}
-        </h3>
-      </div>
-      <form onSubmit={handleSubmit}>
-        <div className="p-6.5">
+    <form onSubmit={handleSubmit}>
+      <div className="p-6.5">
           <div className="mb-4.5 grid grid-cols-1 gap-6 xl:grid-cols-2">
             <div>
               <label className="mb-3 block text-sm font-medium text-black dark:text-white">
@@ -321,6 +315,5 @@ export default function AddressForm({ address, onSave, onCancel }: AddressFormPr
           </div>
         </div>
       </form>
-    </div>
   );
 }

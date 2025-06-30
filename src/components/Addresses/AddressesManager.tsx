@@ -4,14 +4,18 @@ import React, { useState, useEffect } from "react";
 import { Address } from "@/types/company";
 import { addressesAPI } from "@/lib/api";
 import AddressList from "./AddressList";
-import AddressForm from "./AddressForm";
+import AddressModal from "./AddressModal";
+import AddressViewModal from "./AddressViewModal";
 
 export default function AddressesManager() {
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [editingAddress, setEditingAddress] = useState<Address | null>(null);
-  const [showForm, setShowForm] = useState(false);
+  const [viewingAddress, setViewingAddress] = useState<Address | null>(null);
+  const [showFormModal, setShowFormModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     loadAddresses();
@@ -30,14 +34,29 @@ export default function AddressesManager() {
     }
   };
 
+  // Filter addresses based on search term
+  const filteredAddresses = addresses.filter(
+    (address) =>
+      address.line1.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      address.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      address.state.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      address.email1?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      address.phone1?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   const handleAdd = () => {
     setEditingAddress(null);
-    setShowForm(true);
+    setShowFormModal(true);
+  };
+
+  const handleView = (address: Address) => {
+    setViewingAddress(address);
+    setShowViewModal(true);
   };
 
   const handleEdit = (address: Address) => {
     setEditingAddress(address);
-    setShowForm(true);
+    setShowFormModal(true);
   };
 
   const handleDelete = async (addressNo: number) => {
@@ -58,7 +77,7 @@ export default function AddressesManager() {
       } else {
         await addressesAPI.create(addressData);
       }
-      setShowForm(false);
+      setShowFormModal(false);
       setEditingAddress(null);
       await loadAddresses();
     } catch (err) {
@@ -67,14 +86,16 @@ export default function AddressesManager() {
   };
 
   const handleCancel = () => {
-    setShowForm(false);
+    setShowFormModal(false);
     setEditingAddress(null);
   };
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      <div className="rounded-sm border border-stroke bg-white px-5 pb-2.5 pt-6 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+        </div>
       </div>
     );
   }
@@ -83,54 +104,59 @@ export default function AddressesManager() {
     <div className="rounded-sm border border-stroke bg-white px-5 pb-2.5 pt-6 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h4 className="text-xl font-semibold text-black dark:text-white">
-          Address Management
+          Addresses Management
         </h4>
-        {!showForm && (
+        <div className="flex gap-3">
+          <input
+            type="text"
+            placeholder="Search addresses..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary sm:w-80"
+          />
           <button
             onClick={handleAdd}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-center font-medium text-white hover:bg-opacity-90"
+            className="flex items-center justify-center rounded bg-primary px-6 py-2 font-medium text-gray hover:bg-opacity-90"
           >
-            Add New Address
+            Add Address
           </button>
-        )}
+        </div>
       </div>
 
       {error && (
-        <div className="mb-4 flex w-full border-l-6 border-[#F87171] bg-[#F87171] bg-opacity-[15%] px-7 py-8 shadow-md dark:bg-[#1B1B24] dark:bg-opacity-30 md:p-9">
-          <div className="mr-5 flex h-9 w-full max-w-[36px] items-center justify-center rounded-lg bg-[#F87171]">
-            <svg
-              width="13"
-              height="13"
-              viewBox="0 0 13 13"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M6.4917 7.65579L11.106 12.2645C11.2545 12.4128 11.4715 12.5 11.6738 12.5C11.8762 12.5 12.0931 12.4128 12.2416 12.2645C12.5621 11.9445 12.5623 11.4317 12.2423 11.1114L7.6586 6.5027L12.2423 1.89502C12.5623 1.57553 12.5621 1.06272 12.2416 0.742739C11.9211 0.422585 11.4083 0.422707 11.0879 0.742739L6.4917 5.34991L1.89553 0.742739C1.57504 0.422707 1.06222 0.422585 0.741975 0.742739C0.421763 1.06272 0.421641 1.57553 0.741975 1.89502L5.32669 6.5027L0.741975 11.1114C0.421641 11.4317 0.421763 11.9445 0.741975 12.2645C0.882218 12.4128 1.09919 12.5 1.30156 12.5C1.50394 12.5 1.72091 12.4128 1.86115 12.2645L6.4917 7.65579Z"
-                fill="white"
-              />
-            </svg>
-          </div>
-          <div className="w-full">
-            <h3 className="text-lg font-semibold text-[#B45454]">Error!</h3>
-            <p className="text-[#CD5D5D]">{error}</p>
-          </div>
+        <div className="mb-4 rounded-sm border border-danger bg-danger bg-opacity-10 px-4 py-3 text-danger">
+          <p>{error}</p>
+          <button
+            onClick={() => setError(null)}
+            className="mt-2 text-sm underline hover:no-underline"
+          >
+            Dismiss
+          </button>
         </div>
       )}
 
-      {showForm ? (
-        <AddressForm
-          address={editingAddress}
-          onSave={handleSave}
-          onCancel={handleCancel}
-        />
-      ) : (
-        <AddressList
-          addresses={addresses}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-        />
-      )}
+      <AddressList
+        addresses={filteredAddresses}
+        onView={handleView}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
+
+      {/* Modals */}
+      <AddressModal
+        isOpen={showFormModal}
+        onClose={handleCancel}
+        address={editingAddress}
+        onSave={handleSave}
+      />
+
+      <AddressViewModal
+        isOpen={showViewModal}
+        onClose={() => setShowViewModal(false)}
+        address={viewingAddress}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
     </div>
   );
 }
