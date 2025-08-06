@@ -7,9 +7,10 @@ interface AddressFormProps {
   address: Address | null;
   onSave: (address: Omit<Address, "address_no">) => void;
   onCancel: () => void;
+  saving?: boolean;
 }
 
-export default function AddressForm({ address, onSave, onCancel }: AddressFormProps) {
+export default function AddressForm({ address, onSave, onCancel, saving }: AddressFormProps) {
   const [formData, setFormData] = useState({
     line1: address?.line1 || "",
     line2: address?.line2 || "",
@@ -301,14 +302,23 @@ export default function AddressForm({ address, onSave, onCancel }: AddressFormPr
           <div className="flex gap-4.5">
             <button
               type="submit"
-              className="flex w-full justify-center rounded bg-primary p-3 font-medium text-gray hover:bg-opacity-90"
+              disabled={saving}
+              className="flex w-full justify-center rounded bg-primary p-3 font-medium text-gray hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {address ? "Update Address" : "Create Address"}
+              {saving ? (
+                <div className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  {address ? "Updating..." : "Creating..."}
+                </div>
+              ) : (
+                address ? "Update Address" : "Create Address"
+              )}
             </button>
             <button
               type="button"
               onClick={onCancel}
-              className="flex w-full justify-center rounded border border-stroke p-3 font-medium text-black hover:border-black dark:border-strokedark dark:text-white dark:hover:border-white"
+              disabled={saving}
+              className="flex w-full justify-center rounded border border-stroke p-3 font-medium text-black hover:border-black dark:border-strokedark dark:text-white dark:hover:border-white disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>

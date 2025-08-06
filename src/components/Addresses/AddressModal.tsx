@@ -10,12 +10,12 @@ interface AddressModalProps {
   onClose: () => void;
   address: Address | null;
   onSave: (address: Omit<Address, "address_no">) => void;
+  saving?: boolean;
 }
 
-export default function AddressModal({ isOpen, onClose, address, onSave }: AddressModalProps) {
+export default function AddressModal({ isOpen, onClose, address, onSave, saving }: AddressModalProps) {
   const handleSave = (addressData: Omit<Address, "address_no">) => {
     onSave(addressData);
-    onClose();
   };
 
   return (
@@ -29,6 +29,7 @@ export default function AddressModal({ isOpen, onClose, address, onSave }: Addre
         address={address}
         onSave={handleSave}
         onCancel={onClose}
+        saving={saving}
       />
     </Modal>
   );

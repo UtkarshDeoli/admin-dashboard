@@ -84,6 +84,11 @@ export const addressesAPI = {
     });
     if (!response.ok) throw new Error('Failed to delete address');
   },
+  search: async (query: string): Promise<Address[]> => {
+    const response = await fetch(`${API_BASE_URL}/api/addresses/search?query=${encodeURIComponent(query)}`);
+    if (!response.ok) throw new Error('Failed to search addresses');
+    return response.json();
+  },
 };
 
 // People API
@@ -125,6 +130,11 @@ export const peopleAPI = {
       method: 'DELETE',
     });
     if (!response.ok) throw new Error('Failed to delete person');
+  },
+  search: async (query: string): Promise<Person[]> => {
+    const response = await fetch(`${API_BASE_URL}/api/people/search?query=${encodeURIComponent(query)}`);
+    if (!response.ok) throw new Error('Failed to search people');
+    return response.json();
   },
 };
 
