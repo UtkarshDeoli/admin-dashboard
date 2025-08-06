@@ -3,7 +3,6 @@ import dynamic from "next/dynamic";
 import React from "react";
 import ChartOne from "../Charts/ChartOne";
 import ChartTwo from "../Charts/ChartTwo";
-import ChatCard from "../Chat/ChatCard";
 import TableOne from "../Tables/TableOne";
 import CardDataStats from "../CardDataStats";
 
@@ -113,7 +112,6 @@ const ECommerce: React.FC = () => {
         <div className="col-span-12 xl:col-span-8">
           <TableOne />
         </div>
-        <ChatCard />
       </div>
     </>
   );

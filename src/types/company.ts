@@ -5,8 +5,102 @@ export interface Company {
   fka: string; // formerly known as
   acronym: string;
   verified: boolean;
-  created_at: string; // ISO date string
-  updated_at: string; // ISO date string
+  archived: boolean;
+}
+
+export interface Agency {
+  agency_no: number;
+  company_no: number;
+  address_no: number;
+  contact1: string;
+  contact2: string;
+  unions: string;
+  submission_preference: string;
+  represents: string;
+  does_not_represent: string;
+  market: string;
+  seeks: string;
+  literary_only: boolean;
+  bi_coastal: boolean;
+  freelance: boolean;
+  talent: boolean;
+  seeking: boolean;
+  represents_min_age: number;
+  represents_max_age: number;
+  seeking_min_age: number;
+  seeking_max_age: number;
+  archived: boolean;
+}
+
+export interface Casting {
+  casting_company_no: number;
+  company_no: number;
+  address_no: number;
+  contact1: string;
+  contact2: string;
+  submission_preference: string;
+  casts_for: string;
+  seeking: string;
+  market: string;
+  unions: string;
+  talk_variety: boolean;
+  bi_coastal: boolean;
+  primetime: boolean;
+  archived: boolean;
+}
+
+export interface RentalSpace {
+  space_no: number;
+  company_no: number;
+  address_no: number;
+  name: string;
+  dimensions: string;
+  seats: number;
+  space_type: string;
+  archived: boolean;
+}
+
+export interface Theater {
+  theater_no: number;
+  company_no: number;
+  submission_preference: string;
+  literary_submission_preference: string;
+  contract: string;
+  production_company: boolean;
+  summer: boolean;
+  musical: boolean;
+  community: boolean;
+  outdoor: boolean;
+  archived: boolean;
+}
+
+export interface RentalStudio {
+  studio_no: number;
+  company_no: number;
+  address_no: number;
+  name: string;
+  num_studios: number;
+  rate: number;
+  rate_frequency: 'Hourly' | 'Daily' | 'Weekly' | 'Monthly';
+  archived: boolean;
+}
+
+export interface School {
+  school_no: number;
+  company_no: number;
+  policy: string;
+  technique: string;
+  audit: boolean;
+  coaching: boolean;
+  showcase: boolean;
+  bi_coastal: boolean;
+  online: boolean;
+  in_person: boolean;
+  class_size_min: number;
+  class_size_max: number;
+  age_min: number;
+  age_max: number;
+  archived: boolean;
 }
 
 export interface Address {

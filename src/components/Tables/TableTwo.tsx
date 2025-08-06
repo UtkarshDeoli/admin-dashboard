@@ -1,5 +1,13 @@
 import Image from "next/image";
-import { Product } from "@/types/product";
+
+interface Product {
+  image: string;
+  name: string;
+  category: string;
+  price: number;
+  sold: number;
+  profit: number;
+}
 
 const productData: Product[] = [
   {

@@ -5,6 +5,7 @@ import { Company } from "@/types/company";
 import { companiesAPI } from "@/lib/api";
 import CompanyList from "./CompanyList";
 import CompanyForm from "./CompanyForm";
+import router from "next/router";
 
 
 export default function CompaniesManager() {
@@ -39,8 +40,7 @@ export default function CompaniesManager() {
   };
 
   const handleEditCompany = (company: Company) => {
-    setEditingCompany(company);
-    setIsFormOpen(true);
+    router.push(`/companies/${company.company_no}/edit`);
   };
 
   const handleDeleteCompany = async (companyNo: number) => {
@@ -111,18 +111,19 @@ export default function CompaniesManager() {
       <CompanyList
         companies={filteredCompanies}
         onEdit={handleEditCompany}
-        onDelete={handleDeleteCompany}
-      />
+        onDelete={handleDeleteCompany} onView={function (company: Company): void {
+          throw new Error("Function not implemented.");
+        } } deleting={[]}      />
 
       {isFormOpen && (
         <CompanyForm
           company={editingCompany}
-          onSubmit={handleSaveCompany}
-          onClose={() => {
+          onSave={ handleSaveCompany}
+          onCancel={() => {
             setIsFormOpen(false);
             setEditingCompany(null);
           }}
-        />
+        ></CompanyForm>
       )}
     </div>
   );
