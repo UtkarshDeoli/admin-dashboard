@@ -9,9 +9,9 @@ const config: PoolConfig = {
   password: process.env.DB_PASSWORD,
   port: Number(process.env.DB_PORT),
   ssl: {
-    ca: fs.readFileSync(path.join(process.cwd(), process.env.DB_SSL_CA_PATH || '')).toString(),
-    cert: fs.readFileSync(path.join(process.cwd(), process.env.DB_SSL_CERT_PATH || '')).toString(),
-    key: fs.readFileSync(path.join(process.cwd(), process.env.DB_SSL_KEY_PATH || '')).toString(),
+    ca: fs.readFileSync(path.join(process.cwd(), "GCSQL_server-ca.pem")).toString(),
+    cert: fs.readFileSync(path.join(process.cwd(), "GCSQL_client-cert.pem")).toString(),
+    key: fs.readFileSync(path.join(process.cwd(), "GCSQL_client-key.pem")).toString(),
     rejectUnauthorized: false // ✅ same as sslmode='prefer' in psycopg2
   },
   max: Number(process.env.DB_MAX_CONNECTIONS),
