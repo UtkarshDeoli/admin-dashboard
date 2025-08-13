@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { getCompaniesByType } from '@/lib/company-utils';
+import { CompanyType } from '@/types/company';
 
 export async function GET(request: NextRequest) {
   try {
@@ -7,28 +9,48 @@ export async function GET(request: NextRequest) {
     const searchQuery = searchParams.get('query');
     const type = searchParams.get('type');
     
-    if (!searchQuery) {
+    if (!searchQuery && !type) {
       return NextResponse.json(
-        { error: 'Search query is required' },
+        { error: 'Search query or type filter is required' },
         { status: 400 }
       );
     }
 
-    let sql = `
-      SELECT * FROM companies 
-      WHERE (
-        LOWER(name) LIKE LOWER($1) OR 
-        LOWER(description) LIKE LOWER($1) OR 
-        LOWER(fka) LIKE LOWER($1) OR 
-        LOWER(acronym) LIKE LOWER($1)
-      )
-    `;
-    
-    let params = [`%${searchQuery}%`];
-    
-    if (type && type !== 'All') {
-      sql += ' AND company_type = $2';
-      params.push(type);
+    let sql = 'SELECT * FROM companies WHERE 1=1';
+    let params: any[] = [];
+    let paramIndex = 1;
+
+    // Add text search if provided
+    if (searchQuery) {
+      sql += ` AND (
+        LOWER(name) LIKE LOWER($${paramIndex}) OR 
+        LOWER(description) LIKE LOWER($${paramIndex}) OR 
+        LOWER(fka) LIKE LOWER($${paramIndex}) OR 
+        LOWER(acronym) LIKE LOWER($${paramIndex})
+      )`;
+      params.push(`%${searchQuery}%`);
+      paramIndex++;
+    }
+
+    // Handle company type filtering
+    if (type && type !== 'All' && type !== '') {
+      try {
+        // Get companies that match the specified type
+        const companyNosWithType = await getCompaniesByType(type as CompanyType);
+        
+        if (companyNosWithType.length === 0) {
+          // No companies found with this type
+          return NextResponse.json([]);
+        }
+        
+        // Add type filter to SQL
+        const placeholders = companyNosWithType.map((_, index) => `$${paramIndex + index}`).join(',');
+        sql += ` AND company_no IN (${placeholders})`;
+        params.push(...companyNosWithType);
+      } catch (error) {
+        console.error('Error filtering by company type:', error);
+        // Continue without type filter if there's an error
+      }
     }
     
     sql += ' ORDER BY name';

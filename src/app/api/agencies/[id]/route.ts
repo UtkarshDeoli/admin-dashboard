@@ -66,7 +66,7 @@ export async function PUT(
         company_no = $1, address_no = $2, contact1 = $3, contact2 = $4, unions = $5,
         submission_preference = $6, represents = $7, does_not_represent = $8, market = $9,
         seeks = $10, literary_only = $11, bi_coastal = $12, freelance = $13, talent = $14,
-        seeking = $15, represents_min_age = $16, represents_max_age = $17, seeking_min_age = $18,
+        seeking = $15, represents_min_agee = $16, represents_max_age = $17, seeking_min_age = $18,
         seeking_max_age = $19, archived = $20
        WHERE agency_no = $21 
        RETURNING *`,

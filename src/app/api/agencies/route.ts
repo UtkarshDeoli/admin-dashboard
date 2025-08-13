@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
       `INSERT INTO agencies (
         agency_no, company_no, address_no, contact1, contact2, unions, submission_preference,
         represents, does_not_represent, market, seeks, literary_only, bi_coastal, freelance,
-        talent, seeking, represents_min_age, represents_max_age, seeking_min_age, seeking_max_age, archived
+        talent, seeking, represents_min_agee, represents_max_age, seeking_min_age, seeking_max_age, archived
       ) VALUES (
         $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, false
       ) RETURNING *`,

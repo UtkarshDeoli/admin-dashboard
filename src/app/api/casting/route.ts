@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
       seeking,
       market,
       unions,
-      talk_variety,
+      talk_variey,
       bi_coastal,
       primetime
     } = body;
@@ -45,13 +45,13 @@ export async function POST(request: NextRequest) {
     const result = await query(
       `INSERT INTO casting (
         casting_company_no, company_no, address_no, contact1, contact2, submission_preference,
-        casts_for, seeking, market, unions, talk_variety, bi_coastal, primetime, archived
+        casts_for, seeking, market, unions, talk_variey, bi_coastal, primetime, archived
       ) VALUES (
         $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, false
       ) RETURNING *`,
       [
         nextCastingNo, company_no, address_no, contact1, contact2, submission_preference,
-        casts_for, seeking, market, unions, talk_variety || false, bi_coastal || false,
+        casts_for, seeking, market, unions, talk_variey || false, bi_coastal || false,
         primetime || false
       ]
     );
