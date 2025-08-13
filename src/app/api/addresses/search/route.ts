@@ -1,10 +1,12 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
 
-export async function GET(request: Request) {
-    const queryParam = new URL(request.url).searchParams.get('query');
-    console.log('Search query triggered:', queryParam ,{request , url: request.url});
+
+export async function GET(request: NextRequest) {
+    const queryParam = request.nextUrl.searchParams.get('query');
+    console.log('Search query triggered:', queryParam);
     if (!queryParam) {
         return NextResponse.json({ error: 'Query parameter is required' }, { status: 400 });
     }
@@ -14,23 +16,23 @@ export async function GET(request: Request) {
             SELECT 
             *
             FROM addresses
-            WHERE line1 ILIKE '%${queryParam}%' 
-             OR line2 ILIKE '%${queryParam}%'
-             OR line3 ILIKE '%${queryParam}%'
-             OR city ILIKE '%${queryParam}%'
-             OR state ILIKE '%${queryParam}%'
-             OR zip ILIKE '%${queryParam}%'
-             OR country ILIKE '%${queryParam}%'
-             OR phone1 ILIKE '%${queryParam}%'
-             OR phone2 ILIKE '%${queryParam}%'
-             OR phone3 ILIKE '%${queryParam}%'
-             OR email1 ILIKE '%${queryParam}%'
-             OR email2 ILIKE '%${queryParam}%'
-             OR website1 ILIKE '%${queryParam}%'
-             OR website2 ILIKE '%${queryParam}%'
-             OR fax ILIKE '%${queryParam}%'
+            WHERE line1 ILIKE $1
+             OR line2 ILIKE $1
+             OR line3 ILIKE $1
+             OR city ILIKE $1
+             OR state ILIKE $1
+             OR zip ILIKE $1
+             OR country ILIKE $1
+             OR phone1 ILIKE $1
+             OR phone2 ILIKE $1
+             OR phone3 ILIKE $1
+             OR email1 ILIKE $1
+             OR email2 ILIKE $1
+             OR website1 ILIKE $1
+             OR website2 ILIKE $1
+             OR fax ILIKE $1
              ORDER BY address_no
-        `);
+        `, [`%${queryParam}%`]);
         return NextResponse.json(result.rows);
     } catch (error) {
         console.error('Error searching addresses:', error);

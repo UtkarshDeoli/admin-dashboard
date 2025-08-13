@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { Company } from '@/types/company';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const type = searchParams.get('type');
+    const type = request.nextUrl.searchParams.get('type');
     
     let sql = 'SELECT * FROM companies';
     let params: any[] = [];

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Address } from "@/types/company";
 import { peopleAPI, addressesAPI } from "@/lib/api";
 import { useConfirmation } from "@/hooks/useConfirmation";
@@ -24,12 +24,7 @@ export default function PersonAddressesManager({ peopleId }: PersonAddressesMana
   
   const { confirm, confirmationProps } = useConfirmation();
 
-  useEffect(() => {
-    loadAddresses();
-    loadAllAddresses();
-  }, [peopleId, showArchived]);
-
-  const loadAddresses = async () => {
+  const loadAddresses = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -40,16 +35,21 @@ export default function PersonAddressesManager({ peopleId }: PersonAddressesMana
     } finally {
       setLoading(false);
     }
-  };
+  }, [peopleId, showArchived]);
 
-  const loadAllAddresses = async () => {
+  const loadAllAddresses = useCallback(async () => {
     try {
       const data = await addressesAPI.getAll();
       setAllAddresses(data);
     } catch (err) {
       console.error('Failed to load all addresses:', err);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadAddresses();
+    loadAllAddresses();
+  }, [loadAddresses, loadAllAddresses]);
 
   const handleAddAddress = async (addressId: number) => {
     try {

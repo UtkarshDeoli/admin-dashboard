@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Casting, Address } from "@/types/company";
 import { castingAPI, addressesAPI } from "@/lib/api";
 
@@ -31,11 +31,7 @@ export default function CastingForm({ companyId, onSave }: CastingFormProps) {
     primetime: false,
   });
 
-  useEffect(() => {
-    loadData();
-  }, [companyId]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -75,7 +71,11 @@ export default function CastingForm({ companyId, onSave }: CastingFormProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [companyId]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;

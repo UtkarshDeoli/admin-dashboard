@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const entityType = searchParams.get('entity_type');
-    const entityNo = searchParams.get('entity_no');
+    const entityType = request.nextUrl.searchParams.get('entity_type');
+    const entityNo = request.nextUrl.searchParams.get('entity_no');
     
     if (!entityType || !entityNo) {
       return NextResponse.json(

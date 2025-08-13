@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Theater } from "@/types/company";
 import { theatersAPI } from "@/lib/api";
 
@@ -27,11 +27,7 @@ export default function TheaterForm({ companyId, onSave }: TheaterFormProps) {
     outdoor: false,
   });
 
-  useEffect(() => {
-    loadData();
-  }, [companyId]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -63,7 +59,11 @@ export default function TheaterForm({ companyId, onSave }: TheaterFormProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [companyId]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { RentalSpace, Address } from "@/types/company";
 import { rentalSpacesAPI, addressesAPI } from "@/lib/api";
 import { arch } from "os";
@@ -29,11 +29,7 @@ export default function RentalSpaceForm({ companyId, onSave }: RentalSpaceFormPr
     archived: false,
   });
 
-  useEffect(() => {
-    loadData();
-  }, [companyId]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -68,7 +64,11 @@ export default function RentalSpaceForm({ companyId, onSave }: RentalSpaceFormPr
     } finally {
       setLoading(false);
     }
-  };
+  }, [companyId]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;

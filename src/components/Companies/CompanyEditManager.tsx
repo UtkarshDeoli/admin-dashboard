@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Company } from "@/types/company";
 import { companiesAPI } from "@/lib/api";
@@ -46,11 +46,7 @@ export default function CompanyEditManager({ companyId }: CompanyEditManagerProp
   const { confirm, confirmationProps } = useConfirmation();
   const router = useRouter();
 
-  useEffect(() => {
-    loadCompany();
-  }, [companyId]);
-
-  const loadCompany = async () => {
+  const loadCompany = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -70,7 +66,11 @@ export default function CompanyEditManager({ companyId }: CompanyEditManagerProp
     } finally {
       setLoading(false);
     }
-  };
+  }, [companyId]);
+
+  useEffect(() => {
+    loadCompany();
+  }, [loadCompany]);
 
   const handleSaveBasic = async (updatedCompany: Omit<Company, "company_no">) => {
     try {

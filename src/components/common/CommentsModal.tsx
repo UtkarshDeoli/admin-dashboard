@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Comment } from "@/types/company";
 import { commentsAPI } from "@/lib/api";
 import ConfirmationDialog from "@/components/common/ConfirmationDialog";
@@ -32,13 +32,7 @@ export default function CommentsModal({
   
   const { confirm, confirmationProps } = useConfirmation();
 
-  useEffect(() => {
-    if (isOpen) {
-      loadComments();
-    }
-  }, [isOpen, entityType, entityNo]);
-
-  const loadComments = async () => {
+  const loadComments = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -49,7 +43,13 @@ export default function CommentsModal({
     } finally {
       setLoading(false);
     }
-  };
+  }, [entityType, entityNo]);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadComments();
+    }
+  }, [isOpen, loadComments]);
 
   const handleAddComment = async (e: React.FormEvent) => {
     e.preventDefault();

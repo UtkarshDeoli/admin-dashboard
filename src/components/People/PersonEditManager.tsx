@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Person } from "@/types/company";
 import { peopleAPI } from "@/lib/api";
@@ -25,11 +25,7 @@ export default function PersonEditManager({ peopleId }: PersonEditManagerProps) 
   const { confirm, confirmationProps } = useConfirmation();
   const router = useRouter();
 
-  useEffect(() => {
-    loadPerson();
-  }, [peopleId]);
-
-  const loadPerson = async () => {
+  const loadPerson = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -42,7 +38,11 @@ export default function PersonEditManager({ peopleId }: PersonEditManagerProps) 
     } finally {
       setLoading(false);
     }
-  };
+  }, [peopleId]);
+
+  useEffect(() => {
+    loadPerson();
+  }, [loadPerson]);
 
   const handleSaveBasic = async (updatedPerson: Omit<Person, "people_no">) => {
     try {

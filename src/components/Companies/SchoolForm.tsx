@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { School } from "@/types/company";
 import { schoolsAPI } from "@/lib/api";
 
@@ -31,11 +31,7 @@ export default function SchoolForm({ companyId, onSave }: SchoolFormProps) {
     age_max: 0,
   });
 
-  useEffect(() => {
-    loadData();
-  }, [companyId]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -72,7 +68,11 @@ export default function SchoolForm({ companyId, onSave }: SchoolFormProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [companyId]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;

@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
     const peopleId = params.id;
-    const { searchParams } = new URL(request.url);
-    const includeArchived = searchParams.get('includeArchived') === 'true';
+    const includeArchived = request.nextUrl.searchParams.get('includeArchived') === 'true';
     
     let whereClause = 'WHERE pa.people_no = $1';
     if (!includeArchived) {

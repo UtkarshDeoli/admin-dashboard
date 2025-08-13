@@ -37,7 +37,7 @@ const PersonForm: React.FC<PersonFormProps> = ({ person, onSave, onCancel, savin
         no_book: false,
       });
     }
-  }, [person?.people_no]); // Only depend on person ID to avoid unnecessary resets
+  }, [person]); // Include the entire person object since we use its properties
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

@@ -3,11 +3,12 @@ import { query } from '@/lib/db';
 import { getCompaniesByType } from '@/lib/company-utils';
 import { CompanyType } from '@/types/company';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const searchQuery = searchParams.get('query');
-    const type = searchParams.get('type');
+    const searchQuery = request.nextUrl.searchParams.get('query');
+    const type = request.nextUrl.searchParams.get('type');
     
     if (!searchQuery && !type) {
       return NextResponse.json(

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Agency, Address } from "@/types/company";
 import { agenciesAPI, addressesAPI } from "@/lib/api";
 
@@ -38,11 +38,7 @@ export default function AgencyForm({ companyId, onSave }: AgencyFormProps) {
     seeking_max_age: 0,
   });
 
-  useEffect(() => {
-    loadData();
-  }, [companyId]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -89,7 +85,11 @@ export default function AgencyForm({ companyId, onSave }: AgencyFormProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [companyId]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;

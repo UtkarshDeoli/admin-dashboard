@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCompaniesByType } from '@/lib/company-utils';
 import { CompanyType } from '@/types/company';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const type = searchParams.get('type');
+    const type = request.nextUrl.searchParams.get('type');
     
     if (!type || type === 'All' || type === '') {
       return NextResponse.json(
