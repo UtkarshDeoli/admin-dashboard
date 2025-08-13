@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCompaniesByType } from '@/lib/company-utils';
+import { getCompaniesByTypeDB } from '@/lib/server-utils';
 import { CompanyType } from '@/types/company';
 
 export const dynamic = 'force-dynamic';
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const companyNos = await getCompaniesByType(type as CompanyType);
+    const companyNos = await getCompaniesByTypeDB(type as CompanyType);
     return NextResponse.json({ companyNos, count: companyNos.length });
   } catch (error) {
     console.error('Error getting companies by type:', error);

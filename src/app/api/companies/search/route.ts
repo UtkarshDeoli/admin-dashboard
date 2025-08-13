@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { getCompaniesByType } from '@/lib/company-utils';
+import { getCompaniesByTypeDB } from '@/lib/server-utils';
 import { CompanyType } from '@/types/company';
 
 export const dynamic = 'force-dynamic';
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     if (type && type !== 'All' && type !== '') {
       try {
         // Get companies that match the specified type
-        const companyNosWithType = await getCompaniesByType(type as CompanyType);
+        const companyNosWithType = await getCompaniesByTypeDB(type as CompanyType);
         
         if (companyNosWithType.length === 0) {
           // No companies found with this type
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
         }
         
         // Add type filter to SQL
-        const placeholders = companyNosWithType.map((_, index) => `$${paramIndex + index}`).join(',');
+        const placeholders = companyNosWithType.map((_, index: number) => `$${paramIndex + index}`).join(',');
         sql += ` AND company_no IN (${placeholders})`;
         params.push(...companyNosWithType);
       } catch (error) {
