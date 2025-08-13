@@ -113,7 +113,10 @@ export default function CompaniesManager() {
         onEdit={handleEditCompany}
         onDelete={handleDeleteCompany} onView={function (company: Company): void {
           throw new Error("Function not implemented.");
-        } } deleting={[]}      />
+        } } deleting={[]} 
+        onComments={function (company: Company): void {
+          throw new Error("Function not implemented.");
+        } }      />
 
       {isFormOpen && (
         <CompanyForm

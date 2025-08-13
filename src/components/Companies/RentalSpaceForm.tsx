@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { RentalSpace, Address } from "@/types/company";
 import { rentalSpacesAPI, addressesAPI } from "@/lib/api";
+import { arch } from "os";
+import { space } from "postcss/lib/list";
 
 interface RentalSpaceFormProps {
   companyId: number;
@@ -23,6 +25,8 @@ export default function RentalSpaceForm({ companyId, onSave }: RentalSpaceFormPr
     dimensions: '',
     seats: 0,
     space_type: '',
+    space_no: 0,
+    archived: false,
   });
 
   useEffect(() => {
@@ -37,22 +41,23 @@ export default function RentalSpaceForm({ companyId, onSave }: RentalSpaceFormPr
       // Load addresses for dropdown
       const addressData = await addressesAPI.getAll();
       setAddresses(addressData);
-      
       // Try to load existing rental space data
       try {
         const rentalSpaceData = await rentalSpacesAPI.getByCompany(companyId);
-        if (rentalSpaceData && rentalSpaceData.length > 0) {
-          const firstSpace = rentalSpaceData[0];
-          setRentalSpace(firstSpace);
+        if (rentalSpaceData) {
+          setRentalSpace(rentalSpaceData);
           setFormData({
-            address_no: firstSpace.address_no,
-            name: firstSpace.name,
-            dimensions: firstSpace.dimensions,
-            seats: firstSpace.seats,
-            space_type: firstSpace.space_type,
+            address_no: rentalSpaceData.address_no,
+            name: rentalSpaceData.name,
+            dimensions: rentalSpaceData.dimensions,
+            seats: rentalSpaceData.seats,
+            space_type: rentalSpaceData.space_type,
+            space_no: rentalSpaceData.space_no,
+            archived: rentalSpaceData.archived,
           });
           setIsNewRentalSpace(false);
         } else {
+          console.log('Inside else')
           setIsNewRentalSpace(true);
         }
       } catch (err) {

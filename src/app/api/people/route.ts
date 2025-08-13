@@ -17,17 +17,17 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { first_name, middle_name, last_name, address_no, no_book, archived } = body;
+    const { first_name, middle_name, last_name, no_book, archived } = body;
 
     // Get the next people_no manually since we don't have sequence permissions
     const maxResult = await query('SELECT COALESCE(MAX(people_no), 0) + 1 as next_id FROM people');
     const nextPeopleNo = maxResult.rows[0].next_id;
 
     const result = await query(
-      `INSERT INTO people (people_no, first_name, middle_name, last_name, address_no, no_book, archived) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7) 
+      `INSERT INTO people (people_no, first_name, middle_name, last_name, no_book, archived) 
+       VALUES ($1, $2, $3, $4, $5, $6) 
        RETURNING *`,
-      [nextPeopleNo, first_name, middle_name, last_name, address_no, no_book, archived]
+      [nextPeopleNo, first_name, middle_name, last_name, no_book, archived]
     );
 
     return NextResponse.json(result.rows[0], { status: 201 });

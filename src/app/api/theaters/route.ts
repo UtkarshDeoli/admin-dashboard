@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
       submission_preference,
       literary_submission_preference,
       contract,
-      production_company,
+      production_compnay,
       summer,
       musical,
       community,
@@ -41,11 +41,11 @@ export async function POST(request: NextRequest) {
     const result = await query(
       `INSERT INTO theaters (
         theater_no, company_no, submission_preference, literary_submission_preference, 
-        contract, production_company, summer, musical, community, outdoor, archived
+        contract, production_compnay, summer, musical, community, outdoor, archived
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, false) RETURNING *`,
       [
         nextTheaterNo, company_no, submission_preference, literary_submission_preference,
-        contract, production_company || false, summer || false, musical || false,
+        contract, production_compnay || false, summer || false, musical || false,
         community || false, outdoor || false
       ]
     );

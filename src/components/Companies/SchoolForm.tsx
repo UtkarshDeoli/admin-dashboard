@@ -43,6 +43,7 @@ export default function SchoolForm({ companyId, onSave }: SchoolFormProps) {
       // Try to load existing school data
       try {
         const schoolData = await schoolsAPI.getByCompany(companyId);
+        console.log('School data:', schoolData);
         if (schoolData) {
           setSchool(schoolData);
           setFormData({

@@ -32,7 +32,7 @@ export default function AgencyForm({ companyId, onSave }: AgencyFormProps) {
     freelance: false,
     talent: false,
     seeking: false,
-    represents_min_age: 0,
+    represents_min_agee: 0,
     represents_max_age: 0,
     seeking_min_age: 0,
     seeking_max_age: 0,
@@ -71,7 +71,7 @@ export default function AgencyForm({ companyId, onSave }: AgencyFormProps) {
             freelance: agencyData.freelance,
             talent: agencyData.talent,
             seeking: agencyData.seeking,
-            represents_min_age: agencyData.represents_min_age,
+            represents_min_agee: agencyData.represents_min_agee,
             represents_max_age: agencyData.represents_max_age,
             seeking_min_age: agencyData.seeking_min_age,
             seeking_max_age: agencyData.seeking_max_age,
@@ -251,7 +251,7 @@ export default function AgencyForm({ companyId, onSave }: AgencyFormProps) {
               <input
                 type="number"
                 name="represents_min_age"
-                value={formData.represents_min_age}
+                value={formData.represents_min_agee}
                 onChange={handleInputChange}
                 min="0"
                 className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"

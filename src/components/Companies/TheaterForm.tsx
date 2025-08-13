@@ -20,7 +20,7 @@ export default function TheaterForm({ companyId, onSave }: TheaterFormProps) {
     submission_preference: '',
     literary_submission_preference: '',
     contract: '',
-    production_company: false,
+    production_compnay: false,
     summer: false,
     musical: false,
     community: false,
@@ -45,7 +45,7 @@ export default function TheaterForm({ companyId, onSave }: TheaterFormProps) {
             submission_preference: theaterData.submission_preference,
             literary_submission_preference: theaterData.literary_submission_preference,
             contract: theaterData.contract,
-            production_company: theaterData.production_company,
+            production_compnay: theaterData.production_compnay,
             summer: theaterData.summer,
             musical: theaterData.musical,
             community: theaterData.community,
@@ -167,7 +167,7 @@ export default function TheaterForm({ companyId, onSave }: TheaterFormProps) {
           <h4 className="mb-4 text-md font-medium text-black dark:text-white">Theater Type & Features</h4>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
             {[
-              { name: 'production_company', label: 'Production Company' },
+              { name: 'production_compnay', label: 'Production Company' },
               { name: 'summer', label: 'Summer Theater' },
               { name: 'musical', label: 'Musical Theater' },
               { name: 'community', label: 'Community Theater' },

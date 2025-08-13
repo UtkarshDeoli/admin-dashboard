@@ -8,6 +8,14 @@ export interface Company {
   archived: boolean;
 }
 
+export type CompanyType = 'Agency' | 'Casting' | 'RentalSpace' | 'Theater' | 'RentalStudio' | 'School';
+
+export interface CompanyWithType extends Company {
+  companyTypes: CompanyType[];
+  primaryType: CompanyType | null;
+  hasMultipleTypes: boolean;
+}
+
 export interface Agency {
   agency_no: number;
   company_no: number;
@@ -25,7 +33,7 @@ export interface Agency {
   freelance: boolean;
   talent: boolean;
   seeking: boolean;
-  represents_min_age: number;
+  represents_min_agee: number;
   represents_max_age: number;
   seeking_min_age: number;
   seeking_max_age: number;
@@ -43,7 +51,7 @@ export interface Casting {
   seeking: string;
   market: string;
   unions: string;
-  talk_variety: boolean;
+  talk_variey: boolean;
   bi_coastal: boolean;
   primetime: boolean;
   archived: boolean;
@@ -66,7 +74,7 @@ export interface Theater {
   submission_preference: string;
   literary_submission_preference: string;
   contract: string;
-  production_company: boolean;
+  production_compnay: boolean;
   summer: boolean;
   musical: boolean;
   community: boolean;
@@ -121,6 +129,9 @@ export interface Address {
   website2: string;
   fax: string;
   verified: boolean;
+  // Fields for company-address relationship
+  relationship_archived?: boolean;
+  locaction?: string;
 }
 
 export interface Person {
@@ -128,7 +139,6 @@ export interface Person {
   first_name: string;
   middle_name: string;
   last_name: string;
-  address_no: number;
   no_book: boolean;
   archived: boolean;
 }
@@ -157,12 +167,12 @@ export interface Project {
 }
 
 export interface Comment {
-  comment_no: number;
-  entity_type: string;
+  id: number;
   entity_no: number;
   admin_no: number;
   date: string;
   comment: string;
+  entity_type: string;
 }
 
 export interface CompanyAddress {
@@ -171,6 +181,13 @@ export interface CompanyAddress {
   address_no: number;
   archived: boolean;
   locaction: string; // Note: keeping the typo from schema
+}
+
+export interface PeopleAddress {
+  id: number;
+  people_no: number;
+  address_no: number;
+  archived: boolean;
 }
 
 export interface PrivacySetting {

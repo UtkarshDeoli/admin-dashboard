@@ -1,21 +1,31 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { CompanyType } from "@/types/company";
 
 interface CompanySearchFormProps {
   onSearch: (filters: { name: string; companyType: string }) => void;
   defaultFilters: { name: string; companyType: string };
-  companyTypes: string[];
   searching: boolean;
 }
 
 export default function CompanySearchForm({
   onSearch,
   defaultFilters,
-  companyTypes,
   searching
 }: CompanySearchFormProps) {
   const [filters, setFilters] = useState(defaultFilters);
+
+  // Define available company types
+  const companyTypes: (string | CompanyType)[] = [
+    'All',
+    'Agency',
+    'Casting',
+    'RentalSpace',
+    'Theater', 
+    'RentalStudio',
+    'School'
+  ];
 
   useEffect(() => {
     setFilters(defaultFilters);
@@ -82,7 +92,7 @@ export default function CompanySearchForm({
               onChange={handleInputChange}
               className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
             >
-              {companyTypes.map((type) => (
+              {companyTypes.map((type: string | CompanyType) => (
                 <option key={type} value={type === 'All' ? '' : type}>
                   {type}
                 </option>

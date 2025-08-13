@@ -157,8 +157,8 @@ const menuGroups = [
             />
           </svg>
         ),
-        label: "Comments",
-        route: "/comments",
+        label: "Company Addresses",
+        route: "/company-addresses",
       },
       {
         icon: (

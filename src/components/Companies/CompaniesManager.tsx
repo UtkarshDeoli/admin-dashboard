@@ -7,19 +7,10 @@ import CompanyList from "./CompanyList";
 import CompanyModal from "./CompanyModal";
 import CompanyViewModal from "./CompanyViewModal";
 import CompanySearchForm from "./CompanySearchForm";
+import CommentsModal from "@/components/common/CommentsModal";
 import ConfirmationDialog from "@/components/common/ConfirmationDialog";
 import { useConfirmation } from "@/hooks/useConfirmation";
 import { useRouter } from "next/navigation";
-
-const COMPANY_TYPES = [
-  'All',
-  'Agencies',
-  'Casting',
-  'Rental Spaces',
-  'Theaters',
-  'Rental Studios',
-  'Schools'
-];
 
 interface CompaniesManagerProps {
   companyType?: string;
@@ -33,6 +24,8 @@ export default function CompaniesManager({ companyType = 'All' }: CompaniesManag
   const [showFormModal, setShowFormModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showSearchForm, setShowSearchForm] = useState(false);
+  const [showCommentsModal, setShowCommentsModal] = useState(false);
+  const [commentsCompany, setCommentsCompany] = useState<Company | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchFilters, setSearchFilters] = useState({
@@ -105,6 +98,11 @@ export default function CompaniesManager({ companyType = 'All' }: CompaniesManag
   const handleEdit = (company: Company) => {
     console.log('Editing company:', company);
     router.push(`/companies/${company.company_no}/edit`);
+  };
+
+  const handleComments = (company: Company) => {
+    setCommentsCompany(company);
+    setShowCommentsModal(true);
   };
 
   const handleDelete = async (companyNo: number) => {
@@ -235,7 +233,6 @@ export default function CompaniesManager({ companyType = 'All' }: CompaniesManag
           <CompanySearchForm
             onSearch={handleSearch}
             defaultFilters={searchFilters}
-            companyTypes={COMPANY_TYPES}
             searching={searching}
           />
         </div>
@@ -257,6 +254,7 @@ export default function CompaniesManager({ companyType = 'All' }: CompaniesManag
         companies={filteredCompanies}
         onView={handleView}
         onEdit={handleEdit}
+        onComments={handleComments}
         onDelete={handleDelete}
         deleting={deleting}
       />
@@ -278,6 +276,17 @@ export default function CompaniesManager({ companyType = 'All' }: CompaniesManag
         onEdit={handleEdit}
         onDelete={handleDelete}
       />
+
+      {/* Comments Modal */}
+      {commentsCompany && (
+        <CommentsModal
+          isOpen={showCommentsModal}
+          onClose={() => setShowCommentsModal(false)}
+          entityType="Company"
+          entityNo={commentsCompany.company_no}
+          entityName={commentsCompany.name}
+        />
+      )}
 
       {/* Confirmation Dialog */}
       <ConfirmationDialog {...confirmationProps} />

@@ -26,7 +26,7 @@ export default function CastingForm({ companyId, onSave }: CastingFormProps) {
     seeking: '',
     market: '',
     unions: '',
-    talk_variety: false,
+    talk_variey: false,
     bi_coastal: false,
     primetime: false,
   });
@@ -47,6 +47,7 @@ export default function CastingForm({ companyId, onSave }: CastingFormProps) {
       // Try to load existing casting data
       try {
         const castingData = await castingAPI.getByCompany(companyId);
+        console.log('Casting data loaded:', castingData);
         if (castingData) {
           setCasting(castingData);
           setFormData({
@@ -58,7 +59,7 @@ export default function CastingForm({ companyId, onSave }: CastingFormProps) {
             seeking: castingData.seeking,
             market: castingData.market,
             unions: castingData.unions,
-            talk_variety: castingData.talk_variety,
+            talk_variey: castingData.talk_variey,
             bi_coastal: castingData.bi_coastal,
             primetime: castingData.primetime,
           });
@@ -251,7 +252,7 @@ export default function CastingForm({ companyId, onSave }: CastingFormProps) {
           <h4 className="mb-4 text-md font-medium text-black dark:text-white">Casting Features</h4>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
             {[
-              { name: 'talk_variety', label: 'Talk/Variety' },
+              { name: 'talk_variey', label: 'Talk/Variety' },
               { name: 'bi_coastal', label: 'Bi-Coastal' },
               { name: 'primetime', label: 'Primetime' },
             ].map((field) => (

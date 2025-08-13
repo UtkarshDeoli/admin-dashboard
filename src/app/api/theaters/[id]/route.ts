@@ -43,7 +43,7 @@ export async function PUT(
             submission_preference,
             literary_submission_preference,
             contract,
-            production_company,
+            production_compnay,
             summer,
             musical,
             community,
@@ -54,13 +54,13 @@ export async function PUT(
         const result = await query(
             `UPDATE theaters SET
                 company_no = $1, submission_preference = $2, literary_submission_preference = $3, 
-                contract = $4, production_company = $5, summer = $6, musical = $7, 
+                contract = $4, production_compnay = $5, summer = $6, musical = $7, 
                 community = $8, outdoor = $9, archived = $10
              WHERE theater_no = $11 
              RETURNING *`,
             [
                 company_no, submission_preference, literary_submission_preference,
-                contract, production_company, summer, musical,
+                contract, production_compnay, summer, musical,
                 community, outdoor, archived, id
             ]
         );

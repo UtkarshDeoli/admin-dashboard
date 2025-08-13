@@ -33,14 +33,14 @@ export async function PUT(
   try {
     const id = params.id;
     const body = await request.json();
-    const { first_name, middle_name, last_name, address_no, no_book, archived } = body;
+    const { first_name, middle_name, last_name, no_book, archived } = body;
 
     const result = await query(
       `UPDATE people 
-       SET first_name = $1, middle_name = $2, last_name = $3, address_no = $4, no_book = $5, archived = $6
-       WHERE people_no = $7 
+       SET first_name = $1, middle_name = $2, last_name = $3, no_book = $4, archived = $5
+       WHERE people_no = $6 
        RETURNING *`,
-      [first_name, middle_name, last_name, address_no, no_book, archived, id]
+      [first_name, middle_name, last_name, no_book, archived, id]
     );
 
     if (result.rows.length === 0) {

@@ -7,12 +7,19 @@ export async function GET(
 ) {
   try {
     const companyId = params.id;
+    const { searchParams } = new URL(request.url);
+    const includeArchived = searchParams.get('includeArchived') === 'true';
+    
+    let whereClause = 'WHERE ca.company_no = $1';
+    if (!includeArchived) {
+      whereClause += ' AND ca.archived = false';
+    }
     
     const result = await query(`
-      SELECT a.* 
+      SELECT a.*, ca.archived as relationship_archived, ca.locaction 
       FROM addresses a
       JOIN company_addresses ca ON a.address_no = ca.address_no
-      WHERE ca.company_no = $1 AND ca.archived = false
+      ${whereClause}
       ORDER BY a.address_no
     `, [companyId]);
 

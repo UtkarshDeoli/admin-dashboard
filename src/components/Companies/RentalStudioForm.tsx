@@ -41,16 +41,16 @@ export default function RentalStudioForm({ companyId, onSave }: RentalStudioForm
       // Try to load existing rental studio data
       try {
         const rentalStudioData = await rentalStudiosAPI.getByCompany(companyId);
-        if (rentalStudioData && rentalStudioData.length > 0) {
-          const firstStudio = rentalStudioData[0];
-          setRentalStudio(firstStudio);
+        if (rentalStudioData) {
+          console.log('Rental Studio Data:', rentalStudioData);
           setFormData({
-            address_no: firstStudio.address_no,
-            name: firstStudio.name,
-            num_studios: firstStudio.num_studios,
-            rate: firstStudio.rate,
-            rate_frequency: firstStudio.rate_frequency,
+            address_no: rentalStudioData.address_no,
+            name: rentalStudioData.name,
+            num_studios: rentalStudioData.num_studios,
+            rate: rentalStudioData.rate,
+            rate_frequency: rentalStudioData.rate_frequency,
           });
+          setRentalStudio(rentalStudioData);
           setIsNewRentalStudio(false);
         } else {
           setIsNewRentalStudio(true);

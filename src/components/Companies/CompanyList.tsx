@@ -2,16 +2,18 @@
 
 import React from "react";
 import { Company } from "@/types/company";
+import CompanyTypeDisplay from "./CompanyTypeDisplay";
 
 interface CompanyListProps {
   companies: Company[];
   onEdit: (company: Company) => void;
   onDelete: (companyNo: number) => void;
   onView: (company: Company) => void;
+  onComments: (company: Company) => void;
   deleting: number[];
 }
 
-export default function CompanyList({ companies, onEdit, onDelete, onView, deleting }: CompanyListProps) {
+export default function CompanyList({ companies, onEdit, onDelete, onView, onComments, deleting }: CompanyListProps) {
   if (companies.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
@@ -25,7 +27,7 @@ export default function CompanyList({ companies, onEdit, onDelete, onView, delet
       <table className="w-full table-auto">
         <thead>
           <tr className="bg-gray-2 text-left dark:bg-meta-4">
-            <th className="min-w-[120px] py-4 px-4 font-medium text-black dark:text-white">
+            <th className="min-w-[10px] py-4 px-4 font-medium text-black dark:text-white">
               Company No
             </th>
             <th className="min-w-[150px] py-4 px-4 font-medium text-black dark:text-white">
@@ -76,9 +78,7 @@ export default function CompanyList({ companies, onEdit, onDelete, onView, delet
                   <p className="text-sm text-black dark:text-white">{company.fka || "-"}</p>
                 </td>
                 <td className="py-5 px-4">
-                  <span className="inline-flex rounded-full px-3 py-1 text-sm font-medium bg-gray-100 bg-opacity-10 text-gray-600 dark:text-gray-400">
-                    Dynamic
-                  </span>
+                  <CompanyTypeDisplay company={company} showDetails={false} />
                 </td>
                 <td className="py-5 px-4">
                   <p className="text-sm text-black dark:text-white">{company.acronym || "-"}</p>
@@ -145,6 +145,34 @@ export default function CompanyList({ companies, onEdit, onDelete, onView, delet
                           stroke="currentColor"
                           strokeWidth="1.5"
                           strokeLinecap="round"
+                        />
+                      </svg>
+                    </button>
+                    <button
+                      className="hover:text-blue-600"
+                      onClick={() => onComments(company)}
+                      title="Comments"
+                      disabled={isDeleting}
+                    >
+                      <svg
+                        className="fill-current"
+                        width="18"
+                        height="18"
+                        viewBox="0 0 18 18"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M15.75 2.25H2.25C1.42157 2.25 0.75 2.92157 0.75 3.75V11.25C0.75 12.0784 1.42157 12.75 2.25 12.75H4.5V16.5L9 12.75H15.75C16.5784 12.75 17.25 12.0784 17.25 11.25V3.75C17.25 2.92157 16.5784 2.25 15.75 2.25ZM15.75 11.25H8.25L6 13.5V11.25H2.25V3.75H15.75V11.25Z"
+                          fill=""
+                        />
+                        <path
+                          d="M4.5 6.75H13.5V8.25H4.5V6.75Z"
+                          fill=""
+                        />
+                        <path
+                          d="M4.5 9H10.5V10.5H4.5V9Z"
+                          fill=""
                         />
                       </svg>
                     </button>

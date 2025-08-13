@@ -23,10 +23,18 @@ export const companiesAPI = {
   },
 
   search: async (query: string, companyType?: string): Promise<Company[]> => {
-    let url = `${API_BASE_URL}/api/companies/search?query=${encodeURIComponent(query)}`;
-    if (companyType) {
-      url += `&type=${encodeURIComponent(companyType)}`;
+    let url = `${API_BASE_URL}/api/companies/search?`;
+    const params = new URLSearchParams();
+    
+    if (query) {
+      params.append('query', query);
     }
+    if (companyType && companyType !== 'All' && companyType !== '') {
+      params.append('type', companyType);
+    }
+    
+    url += params.toString();
+    
     const response = await fetch(url);
     if (!response.ok) throw new Error('Failed to search companies');
     return response.json();
@@ -60,18 +68,19 @@ export const companiesAPI = {
   },
 
   // Get company addresses
-  getAddresses: async (companyId: number): Promise<Address[]> => {
-    const response = await fetch(`${API_BASE_URL}/api/companies/${companyId}/addresses`);
+  getAddresses: async (companyId: number, includeArchived: boolean = false): Promise<Address[]> => {
+    const url = `${API_BASE_URL}/api/companies/${companyId}/addresses${includeArchived ? '?includeArchived=true' : ''}`;
+    const response = await fetch(url);
     if (!response.ok) throw new Error('Failed to fetch company addresses');
     return response.json();
   },
 
   // Add address to company
-  addAddress: async (companyId: number, addressId: number): Promise<void> => {
+  addAddress: async (companyId: number, addressId: number, locaction: string = ''): Promise<void> => {
     const response = await fetch(`${API_BASE_URL}/api/companies/${companyId}/addresses`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ address_no: addressId }),
+      body: JSON.stringify({ address_no: addressId, locaction }),
     });
     if (!response.ok) throw new Error('Failed to add address to company');
   },
@@ -82,6 +91,16 @@ export const companiesAPI = {
       method: 'DELETE',
     });
     if (!response.ok) throw new Error('Failed to remove address from company');
+  },
+
+  // Archive/unarchive address for company
+  archiveAddress: async (companyId: number, addressId: number, archived: boolean, locaction: string = ''): Promise<void> => {
+    const response = await fetch(`${API_BASE_URL}/api/companies/${companyId}/addresses/${addressId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ archived, locaction }),
+    });
+    if (!response.ok) throw new Error('Failed to update company address');
   },
 
   // Get company type
@@ -190,10 +209,47 @@ export const peopleAPI = {
     });
     if (!response.ok) throw new Error('Failed to delete person');
   },
+
   search: async (query: string): Promise<Person[]> => {
     const response = await fetch(`${API_BASE_URL}/api/people/search?query=${encodeURIComponent(query)}`);
     if (!response.ok) throw new Error('Failed to search people');
     return response.json();
+  },
+
+  // Get person addresses
+  getAddresses: async (peopleId: number, includeArchived: boolean = false): Promise<Address[]> => {
+    const url = `${API_BASE_URL}/api/people/${peopleId}/addresses${includeArchived ? '?includeArchived=true' : ''}`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Failed to fetch person addresses');
+    return response.json();
+  },
+
+  // Add address to person
+  addAddress: async (peopleId: number, addressId: number): Promise<void> => {
+    const response = await fetch(`${API_BASE_URL}/api/people/${peopleId}/addresses`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ address_no: addressId }),
+    });
+    if (!response.ok) throw new Error('Failed to add address to person');
+  },
+
+  // Remove address from person
+  removeAddress: async (peopleId: number, addressId: number): Promise<void> => {
+    const response = await fetch(`${API_BASE_URL}/api/people/${peopleId}/addresses/${addressId}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) throw new Error('Failed to remove address from person');
+  },
+
+  // Archive/unarchive address for person
+  archiveAddress: async (peopleId: number, addressId: number, archived: boolean): Promise<void> => {
+    const response = await fetch(`${API_BASE_URL}/api/people/${peopleId}/addresses/${addressId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ archived }),
+    });
+    if (!response.ok) throw new Error('Failed to update person address');
   },
 };
 
@@ -384,8 +440,9 @@ export const rentalSpacesAPI = {
     return response.json();
   },
 
-  getByCompany: async (companyId: number): Promise<RentalSpace[]> => {
+  getByCompany: async (companyId: number): Promise<RentalSpace | null> => {
     const response = await fetch(`${API_BASE_URL}/api/companies/${companyId}/rental-spaces`);
+    if (response.status === 404) return null;
     if (!response.ok) throw new Error('Failed to fetch rental spaces');
     return response.json();
   },
@@ -481,7 +538,7 @@ export const rentalStudiosAPI = {
     return response.json();
   },
 
-  getByCompany: async (companyId: number): Promise<RentalStudio[]> => {
+  getByCompany: async (companyId: number): Promise<RentalStudio> => {
     const response = await fetch(`${API_BASE_URL}/api/companies/${companyId}/rental-studios`);
     if (!response.ok) throw new Error('Failed to fetch rental studios');
     return response.json();
@@ -561,5 +618,41 @@ export const schoolsAPI = {
       method: 'DELETE',
     });
     if (!response.ok) throw new Error('Failed to delete school');
+  },
+};
+
+// Comments API
+export const commentsAPI = {
+  getByEntity: async (entityType: string, entityNo: number): Promise<Comment[]> => {
+    const response = await fetch(`${API_BASE_URL}/api/comments?entity_type=${entityType}&entity_no=${entityNo}`);
+    if (!response.ok) throw new Error('Failed to fetch comments');
+    return response.json();
+  },
+
+  create: async (entityType: string, entityNo: number, adminNo: number, comment: string): Promise<Comment> => {
+    const response = await fetch(`${API_BASE_URL}/api/comments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ entity_type: entityType, entity_no: entityNo, admin_no: adminNo, comment }),
+    });
+    if (!response.ok) throw new Error('Failed to create comment');
+    return response.json();
+  },
+
+  update: async (id: number, comment: string): Promise<Comment> => {
+    const response = await fetch(`${API_BASE_URL}/api/comments/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ comment }),
+    });
+    if (!response.ok) throw new Error('Failed to update comment');
+    return response.json();
+  },
+
+  delete: async (id: number): Promise<void> => {
+    const response = await fetch(`${API_BASE_URL}/api/comments/${id}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) throw new Error('Failed to delete comment');
   },
 };

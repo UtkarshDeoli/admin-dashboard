@@ -11,7 +11,8 @@ import RentalSpaceForm from "./RentalSpaceForm";
 import TheaterForm from "./TheaterForm";
 import RentalStudioForm from "./RentalStudioForm";
 import SchoolForm from "./SchoolForm";
-import AddressesManager from "@/components/Addresses/AddressesManager";
+import CompanyAddressesManager from "./CompanyAddressesManager";
+import CommentsModal from "@/components/common/CommentsModal";
 import ConfirmationDialog from "@/components/common/ConfirmationDialog";
 import { useConfirmation } from "@/hooks/useConfirmation";
 
@@ -40,6 +41,7 @@ export default function CompanyEditManager({ companyId }: CompanyEditManagerProp
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'basic' | 'type-specific' | 'addresses'>('basic');
   const [changingType, setChangingType] = useState(false);
+  const [showCommentsModal, setShowCommentsModal] = useState(false);
   
   const { confirm, confirmationProps } = useConfirmation();
   const router = useRouter();
@@ -193,6 +195,12 @@ export default function CompanyEditManager({ companyId }: CompanyEditManagerProp
           </div>
           <div className="flex gap-3">
             <button
+              onClick={() => setShowCommentsModal(true)}
+              className="flex items-center justify-center rounded border border-stroke px-6 py-2 font-medium text-black hover:border-black dark:border-strokedark dark:text-white dark:hover:border-white"
+            >
+              View Comments
+            </button>
+            <button
               onClick={() => router.push('/companies')}
               className="flex items-center justify-center rounded border border-stroke px-6 py-2 font-medium text-black hover:border-black dark:border-strokedark dark:text-white dark:hover:border-white"
             >
@@ -329,12 +337,23 @@ export default function CompanyEditManager({ companyId }: CompanyEditManagerProp
 
       {activeTab === 'addresses' && (
         <div className="rounded-sm border border-stroke bg-white px-5 pb-2.5 pt-6 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
-          <AddressesManager />
+          <CompanyAddressesManager companyId={companyId} />
         </div>
       )}
 
       {/* Confirmation Dialog */}
       <ConfirmationDialog {...confirmationProps} />
+
+      {/* Comments Modal */}
+      {company && (
+        <CommentsModal
+          isOpen={showCommentsModal}
+          onClose={() => setShowCommentsModal(false)}
+          entityType="Company"
+          entityNo={companyId}
+          entityName={company.name}
+        />
+      )}
     </div>
   );
 }
