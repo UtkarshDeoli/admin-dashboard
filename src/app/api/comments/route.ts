@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { requireAdmin } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
+    // Ensure admin is authenticated
+    requireAdmin();
+    
     const entityType = request.nextUrl.searchParams.get('entity_type');
     const entityNo = request.nextUrl.searchParams.get('entity_no');
     
@@ -21,7 +25,13 @@ export async function GET(request: NextRequest) {
     );
 
     return NextResponse.json(result.rows);
-  } catch (error) {
+  } catch (error: any) {
+    if (error.message === 'Unauthorized') {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
     console.error('Error fetching comments:', error);
     return NextResponse.json(
       { error: 'Failed to fetch comments' },
@@ -32,12 +42,15 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // Get admin number from session
+    const adminNo = requireAdmin();
+    
     const body = await request.json();
-    const { entity_type, entity_no, admin_no, comment } = body;
+    const { entity_type, entity_no, comment } = body;
 
-    if (!entity_type || !entity_no || !admin_no || !comment) {
+    if (!entity_type || !entity_no || !comment) {
       return NextResponse.json(
-        { error: 'entity_type, entity_no, admin_no, and comment are required' },
+        { error: 'entity_type, entity_no, and comment are required' },
         { status: 400 }
       );
     }
@@ -50,11 +63,17 @@ export async function POST(request: NextRequest) {
       `INSERT INTO comments (id, entity_type, entity_no, admin_no, date, comment) 
        VALUES ($1, $2, $3, $4, NOW(), $5) 
        RETURNING *`,
-      [nextId, entity_type, entity_no, admin_no, comment]
+      [nextId, entity_type, entity_no, adminNo, comment]
     );
 
     return NextResponse.json(result.rows[0], { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
+    if (error.message === 'Unauthorized') {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
     console.error('Error creating comment:', error);
     return NextResponse.json(
       { error: 'Failed to create comment' },

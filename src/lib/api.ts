@@ -40,7 +40,7 @@ export const companiesAPI = {
     return response.json();
   },
 
-  create: async (company: Omit<Company, 'company_no' | 'created_at' | 'updated_at'>): Promise<Company> => {
+  create: async (company: Omit<Company, 'company_no'>): Promise<Company> => {
     const response = await fetch(`${API_BASE_URL}/api/companies`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -50,7 +50,7 @@ export const companiesAPI = {
     return response.json();
   },
 
-  update: async (id: number, company: Omit<Company, 'company_no' | 'created_at' | 'updated_at'>): Promise<Company> => {
+  update: async (id: number, company: Omit<Company, 'company_no'>): Promise<Company> => {
     const response = await fetch(`${API_BASE_URL}/api/companies/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },

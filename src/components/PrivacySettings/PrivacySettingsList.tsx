@@ -7,14 +7,22 @@ interface PrivacySettingsListProps {
   privacySettings: PrivacySetting[];
   onEdit: (privacySetting: PrivacySetting) => void;
   onDelete: (id: number) => void;
-  onTogglePrivacy: (id: number) => void;
+  onToggleOnlinePrivacy: (id: number) => void;
+  onTogglePublicationPrivacy: (id: number) => void;
+  selectedIds?: number[];
+  onSelectItem?: (id: number, checked: boolean) => void;
+  onSelectAll?: (checked: boolean) => void;
 }
 
 const PrivacySettingsList: React.FC<PrivacySettingsListProps> = ({ 
   privacySettings, 
   onEdit, 
   onDelete, 
-  onTogglePrivacy 
+  onToggleOnlinePrivacy,
+  onTogglePublicationPrivacy,
+  selectedIds = [],
+  onSelectItem,
+  onSelectAll
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterEntityType, setFilterEntityType] = useState('');
@@ -28,8 +36,10 @@ const PrivacySettingsList: React.FC<PrivacySettingsListProps> = ({
     
     const matchesEntityType = !filterEntityType || ps.entity_type === filterEntityType;
     const matchesPrivacy = !filterPrivacy || 
-      (filterPrivacy === 'private' && ps.is_private) ||
-      (filterPrivacy === 'public' && !ps.is_private);
+      (filterPrivacy === 'online-private' && ps.is_private_online) ||
+      (filterPrivacy === 'publication-private' && ps.is_private_publication) ||
+      (filterPrivacy === 'fully-private' && ps.is_private_online && ps.is_private_publication) ||
+      (filterPrivacy === 'fully-public' && !ps.is_private_online && !ps.is_private_publication);
     
     return matchesSearch && matchesEntityType && matchesPrivacy;
   });
@@ -69,8 +79,10 @@ const PrivacySettingsList: React.FC<PrivacySettingsListProps> = ({
             className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-strokedark dark:bg-meta-4 dark:text-white"
           >
             <option value="">All Privacy States</option>
-            <option value="private">Private</option>
-            <option value="public">Public</option>
+            <option value="online-private">Online Private</option>
+            <option value="publication-private">Publication Private</option>
+            <option value="fully-private">Fully Private</option>
+            <option value="fully-public">Fully Public</option>
           </select>
         </div>
       </div>
@@ -79,16 +91,42 @@ const PrivacySettingsList: React.FC<PrivacySettingsListProps> = ({
         <table className="w-full table-auto">
           <thead>
             <tr className="bg-gray-2 text-left dark:bg-meta-4">
+              {onSelectItem && (
+                <th className="px-4 py-4 font-medium text-black dark:text-white w-12">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.length === filteredPrivacySettings.length && filteredPrivacySettings.length > 0}
+                    ref={(el) => {
+                      if (el && filteredPrivacySettings.length > 0) {
+                        el.indeterminate = selectedIds.length > 0 && selectedIds.length < filteredPrivacySettings.length;
+                      }
+                    }}
+                    onChange={(e) => onSelectAll?.(e.target.checked)}
+                    className="rounded"
+                  />
+                </th>
+              )}
               <th className="px-4 py-4 font-medium text-black dark:text-white">ID</th>
               <th className="px-4 py-4 font-medium text-black dark:text-white">Entity</th>
               <th className="px-4 py-4 font-medium text-black dark:text-white">Field Name</th>
-              <th className="px-4 py-4 font-medium text-black dark:text-white">Privacy Status</th>
+              <th className="px-4 py-4 font-medium text-black dark:text-white">Online Privacy</th>
+              <th className="px-4 py-4 font-medium text-black dark:text-white">Publication Privacy</th>
               <th className="px-4 py-4 font-medium text-black dark:text-white">Actions</th>
             </tr>
           </thead>
           <tbody>
             {filteredPrivacySettings.map((ps) => (
               <tr key={ps.id} className="border-b border-stroke dark:border-strokedark">
+                {onSelectItem && (
+                  <td className="px-4 py-4">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.includes(ps.id)}
+                      onChange={(e) => onSelectItem(ps.id, e.target.checked)}
+                      className="rounded"
+                    />
+                  </td>
+                )}
                 <td className="px-4 py-4 text-black dark:text-white">
                   {ps.id}
                 </td>
@@ -109,7 +147,7 @@ const PrivacySettingsList: React.FC<PrivacySettingsListProps> = ({
                 </td>
                 <td className="px-4 py-4">
                   <div className="flex items-center space-x-2">
-                    {ps.is_private ? (
+                    {ps.is_private_online ? (
                       <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-800">
                         Private
                       </span>
@@ -119,7 +157,26 @@ const PrivacySettingsList: React.FC<PrivacySettingsListProps> = ({
                       </span>
                     )}
                     <button
-                      onClick={() => onTogglePrivacy(ps.id)}
+                      onClick={() => onToggleOnlinePrivacy(ps.id)}
+                      className="text-xs text-blue-600 hover:text-blue-800 underline"
+                    >
+                      Toggle
+                    </button>
+                  </div>
+                </td>
+                <td className="px-4 py-4">
+                  <div className="flex items-center space-x-2">
+                    {ps.is_private_publication ? (
+                      <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-800">
+                        Private
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
+                        Public
+                      </span>
+                    )}
+                    <button
+                      onClick={() => onTogglePublicationPrivacy(ps.id)}
                       className="text-xs text-blue-600 hover:text-blue-800 underline"
                     >
                       Toggle

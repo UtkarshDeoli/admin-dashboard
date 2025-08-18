@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { PrivacySetting } from '@/types/company';
+import { privacySettingsApi } from '@/lib/privacySettingsApi';
 
 interface PrivacySettingsFormProps {
   privacySetting?: PrivacySetting;
@@ -16,10 +17,14 @@ const PrivacySettingsForm: React.FC<PrivacySettingsFormProps> = ({
 }) => {
   const [formData, setFormData] = useState({
     entity_no: 0,
-    entity_type: 'company',
+    entity_type: 'Company' as 'Company' | 'People' | 'Address' | 'Agency',
     field_name: '',
-    is_private: false
+    is_private_online: false,
+    is_private_publication: false
   });
+
+  const [availableFields, setAvailableFields] = useState<string[]>([]);
+  const [loadingFields, setLoadingFields] = useState(false);
 
   useEffect(() => {
     if (privacySetting) {
@@ -27,10 +32,29 @@ const PrivacySettingsForm: React.FC<PrivacySettingsFormProps> = ({
         entity_no: privacySetting.entity_no,
         entity_type: privacySetting.entity_type,
         field_name: privacySetting.field_name,
-        is_private: privacySetting.is_private
+        is_private_online: privacySetting.is_private_online,
+        is_private_publication: privacySetting.is_private_publication
       });
     }
   }, [privacySetting]);
+
+  // Load available fields when entity type changes
+  useEffect(() => {
+    loadAvailableFields(formData.entity_type);
+  }, [formData.entity_type]);
+
+  const loadAvailableFields = async (entityType: string) => {
+    try {
+      setLoadingFields(true);
+      const fields = await privacySettingsApi.getAvailableFields(entityType);
+      setAvailableFields(fields);
+    } catch (err) {
+      console.error('Error loading available fields:', err);
+      setAvailableFields([]);
+    } finally {
+      setLoadingFields(false);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,19 +70,13 @@ const PrivacySettingsForm: React.FC<PrivacySettingsFormProps> = ({
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : 
-              name === 'entity_no' ? parseInt(value) || 0 : value
+              name === 'entity_no' ? parseInt(value) || 0 : value,
+      // Clear field_name when entity_type changes
+      ...(name === 'entity_type' ? { field_name: '' } : {})
     }));
   };
 
-  const entityTypes = ['company', 'person', 'project', 'address'];
-  
-  // Common field names for different entity types
-  const fieldOptions = {
-    company: ['name', 'description', 'fka', 'acronym', 'verified'],
-    person: ['first_name', 'middle_name', 'last_name', 'address_no', 'no_book'],
-    project: ['name', 'aka', 'fka', 'description', 'start_date', 'end_date', 'city1', 'state1', 'country1'],
-    address: ['line1', 'line2', 'line3', 'city', 'state', 'zip', 'country', 'phone1', 'phone2', 'phone3', 'email1', 'email2', 'website1', 'website2', 'fax']
-  };
+  const entityTypes = ['Company', 'People', 'Address', 'Agency'];
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -89,7 +107,7 @@ const PrivacySettingsForm: React.FC<PrivacySettingsFormProps> = ({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Entity Number *
+              Entity ID *
             </label>
             <input
               type="number"
@@ -111,10 +129,13 @@ const PrivacySettingsForm: React.FC<PrivacySettingsFormProps> = ({
               value={formData.field_name}
               onChange={handleChange}
               required
+              disabled={loadingFields}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="">Select Field</option>
-              {fieldOptions[formData.entity_type as keyof typeof fieldOptions]?.map(field => (
+              <option value="">
+                {loadingFields ? 'Loading fields...' : 'Select Field'}
+              </option>
+              {availableFields.map(field => (
                 <option key={field} value={field}>
                   {field}
                 </option>
@@ -125,22 +146,39 @@ const PrivacySettingsForm: React.FC<PrivacySettingsFormProps> = ({
             </p>
           </div>
 
-          <div className="flex items-center">
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                name="is_private"
-                checked={formData.is_private}
-                onChange={handleChange}
-                className="mr-2"
-              />
-              <span className="text-sm text-gray-700">Make this field private</span>
-            </label>
+          <div className="space-y-3">
+            <div className="flex items-center">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  name="is_private_online"
+                  checked={formData.is_private_online}
+                  onChange={handleChange}
+                  className="mr-2"
+                />
+                <span className="text-sm text-gray-700">Make this field private online</span>
+              </label>
+            </div>
+            <div className="flex items-center">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  name="is_private_publication"
+                  checked={formData.is_private_publication}
+                  onChange={handleChange}
+                  className="mr-2"
+                />
+                <span className="text-sm text-gray-700">Make this field private for publications</span>
+              </label>
+            </div>
           </div>
 
           <div className="bg-gray-50 p-3 rounded-md">
             <p className="text-xs text-gray-600">
-              <strong>Note:</strong> Private fields will be hidden from public view and require special permissions to access.
+              <strong>Note:</strong> 
+              <br />• <strong>Online Privacy:</strong> Field will be hidden from website view and require special permissions to access.
+              <br />• <strong>Publication Privacy:</strong> Field will be excluded from any printed books or publications.
+              <br />• Both privacy settings can be enabled independently for maximum control.
             </p>
           </div>
 

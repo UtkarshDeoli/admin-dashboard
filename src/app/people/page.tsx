@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import PeopleManager from "@/components/People/PeopleManager";
+import AuthGuard from "@/components/AuthGuard";
 
 export const metadata: Metadata = {
   title: "People | Admin Dashboard",
@@ -9,8 +10,10 @@ export const metadata: Metadata = {
 
 export default function People() {
   return (
-    <DefaultLayout>
-      <PeopleManager />
-    </DefaultLayout>
+    <AuthGuard>
+      <DefaultLayout>
+        <PeopleManager />
+      </DefaultLayout>
+    </AuthGuard>
   );
 }

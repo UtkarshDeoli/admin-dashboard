@@ -193,7 +193,8 @@ export interface PeopleAddress {
 export interface PrivacySetting {
   id: number;
   entity_no: number;
-  entity_type: string;
+  entity_type: 'People' | 'Company' | 'Address' | 'Agency';
   field_name: string;
-  is_private: boolean;
+  is_private_online: boolean;
+  is_private_publication: boolean;
 }
