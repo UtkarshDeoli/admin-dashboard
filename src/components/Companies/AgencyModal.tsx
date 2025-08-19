@@ -2,7 +2,7 @@
 
 import React from "react";
 import Modal from "@/components/common/Modal";
-import AgencyForm from "./AgencyForm";
+import AgencyModalForm from "./AgencyModalForm";
 import { Agency } from "@/types/company";
 
 interface AgencyModalProps {
@@ -31,7 +31,7 @@ export default function AgencyModal({
       title={agency ? "Edit Agency" : "Add New Agency"}
       size="xl"
     >
-      <AgencyForm
+      <AgencyModalForm
         agency={agency}
         onSave={handleSave}
         onCancel={onClose}
