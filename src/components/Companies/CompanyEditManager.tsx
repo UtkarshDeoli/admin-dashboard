@@ -6,7 +6,7 @@ import { Company } from "@/types/company";
 import { companiesAPI } from "@/lib/api";
 import CompanyForm from "./CompanyForm";
 import AgencyForm from "./AgencyForm";
-import CastingForm from "./CastingForm";
+import CastingForm from "./Casting/CastingForm";
 import RentalSpaceForm from "./RentalSpaceForm";
 import TheaterForm from "./TheaterForm";
 import RentalStudioForm from "./RentalStudioForm";
