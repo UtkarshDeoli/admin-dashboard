@@ -8,7 +8,7 @@ export interface Company {
   archived: boolean;
 }
 
-export type CompanyType = 'Agency' | 'Casting' | 'RentalSpace'z | 'Theater' | 'RentalStudio' | 'School';
+export type CompanyType = 'Agency' | 'Casting' | 'RentalSpace' | 'Theater' | 'RentalStudio' | 'School';
 
 export interface CompanyWithType extends Company {
   companyTypes: CompanyType[];
