@@ -4,11 +4,11 @@ import AuthGuard from "@/components/AuthGuard";
 import RentalStudioManager from "@/components/Companies/Rental-Studios/RentalStudioManager";
 
 export const metadata: Metadata = {
-  title: "Agencies | Admin Dashboard",
-  description: "Manage agencies in the admin dashboard",
+  title: "Rental Studios | Admin Dashboard",
+  description: "Manage rental studios in the admin dashboard",
 };
 
-export default function Agencies() {
+export default function RentalStudios() {
   return (
     <AuthGuard>
       <DefaultLayout>

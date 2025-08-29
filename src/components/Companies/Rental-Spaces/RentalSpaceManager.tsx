@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { RentalSpace } from "@/types/company";
-import AgencySearchForm from "../AgencySearchForm";
+import RentalSpaceSearchForm from "./RentalSpaceSearchForm";
 import CommentsModal from "@/components/common/CommentsModal";
 import ConfirmationDialog from "@/components/common/ConfirmationDialog";
 import { useConfirmation } from "@/hooks/useConfirmation";
@@ -24,7 +24,7 @@ export default function RentalSpaceManager() {
   const [error, setError] = useState<string | null>(null);
   const [searchFilters, setSearchFilters] = useState({
     companyName: '',
-    market: '',
+    spaceType: '',
     dimensions: ''
   });
   
@@ -42,12 +42,12 @@ export default function RentalSpaceManager() {
       
       const response = await fetch('/api/rental-spaces');
       if (!response.ok) {
-        throw new Error('Failed to fetch agencies');
+        throw new Error('Failed to fetch rental spaces');
       }
       const data = await response.json();
       setRentalSpaces(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load agencies');
+      setError(err instanceof Error ? err.message : 'Failed to load rental spaces');
     } finally {
       setLoading(false);
     }
@@ -60,6 +60,13 @@ export default function RentalSpaceManager() {
     if (searchFilters.companyName) {
       filtered = filtered.filter(rentalSpace =>
         (rentalSpace as any).company_name?.toLowerCase().includes(searchFilters.companyName.toLowerCase())
+      );
+    }
+
+    // Filter by space type
+    if (searchFilters.spaceType) {
+      filtered = filtered.filter(rentalSpace =>
+        rentalSpace.space_type?.toLowerCase().includes(searchFilters.spaceType.toLowerCase())
       );
     }
 
@@ -112,12 +119,12 @@ export default function RentalSpaceManager() {
         });
         
         if (!response.ok) {
-          throw new Error('Failed to delete casting');
+          throw new Error('Failed to delete rental space');
         }
 
         await loadRentalSpaces();
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to delete agency');
+        setError(err instanceof Error ? err.message : 'Failed to delete rental space');
       } finally {
         setDeleting(prev => prev.filter(id => id !== rentalSpaceNo));
       }
@@ -139,11 +146,11 @@ export default function RentalSpaceManager() {
         });
         
         if (!response.ok) {
-          throw new Error('Failed to update agency');
+          throw new Error('Failed to update rental space');
         }
       } else {
-        // Create new agency
-        const response = await fetch('/api/agencies', {
+        // Create new rental space
+        const response = await fetch('/api/rental-spaces', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -166,12 +173,12 @@ export default function RentalSpaceManager() {
     }
   };
 
-  const handleSearch = async (filters: { companyName: string; market: string; dimensions: string }) => {
+  const handleSearch = async (filters: { companyName: string; spaceType: string; dimensions: string }) => {
     try {
       setSearching(true);
       setSearchFilters(filters);
 
-      if (filters.companyName.trim() === '' && filters.market.trim() === '' && filters.dimensions.trim() === '') {
+      if (filters.companyName.trim() === '' && filters.spaceType.trim() === '' && filters.dimensions.trim() === '') {
         await loadRentalSpaces();
       }
     } catch (err) {
@@ -213,7 +220,7 @@ export default function RentalSpaceManager() {
     <div className="rounded-sm border border-stroke bg-white px-5 pb-2.5 pt-6 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h4 className="text-xl font-semibold text-black dark:text-white">
-          Agencies Management
+          Rental Spaces Management
         </h4>
         <div className="flex gap-3">
           <button
@@ -230,21 +237,21 @@ export default function RentalSpaceManager() {
             onClick={handleAdd}
             className="flex items-center justify-center rounded bg-primary px-6 py-2 font-medium text-gray hover:bg-opacity-90"
           >
-            Add Agency
+            Add Rental Space
           </button>
         </div>
       </div>
 
       {/* Search Form */}
-      {/* {showSearchForm && (
+      {showSearchForm && (
         <div className="mb-6">
-          <AgencySearchForm
+          <RentalSpaceSearchForm
             onSearch={handleSearch}
             defaultFilters={searchFilters}
             searching={searching}
           />
         </div>
-      )} */}
+      )}
 
       {error && (
         <div className="mb-4 rounded-sm border border-danger bg-danger bg-opacity-10 px-4 py-3 text-danger">

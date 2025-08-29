@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
-import AgenciesManager from "@/components/Companies/AgenciesManager";
+import AgenciesManager from "@/components/Companies/Agency/AgenciesManager";
 import AuthGuard from "@/components/AuthGuard";
 
 export const metadata: Metadata = {

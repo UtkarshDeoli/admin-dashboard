@@ -8,11 +8,11 @@ import { useConfirmation } from "@/hooks/useConfirmation";
 import CastingList from "./CastingList";
 import CastingModal from "./CastingModal";
 import CastingViewModal from "./CastingViewModal";
-import AgencySearchForm from "../AgencySearchForm";
+import CastingSearchForm from "./CastingSearchForm";
 
 export default function CastingManager() {
-  const [casting, setCasting] = useState<Casting[]>([]);
-  const [filteredCasting, setFilteredCasting] = useState<Casting[]>([]);
+  const [castings, setCastings] = useState<Casting[]>([]);
+  const [filteredCastings, setFilteredCastings] = useState<Casting[]>([]);
   const [editingCasting, setEditingCasting] = useState<Casting | null>(null);
   const [viewingCasting, setViewingCasting] = useState<Casting | null>(null);
   const [showFormModal, setShowFormModal] = useState(false);
@@ -35,26 +35,26 @@ export default function CastingManager() {
   
   const { confirm, confirmationProps } = useConfirmation();
 
-  const loadAgencies = useCallback(async () => {
+  const loadCastings = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       
       const response = await fetch('/api/casting');
       if (!response.ok) {
-        throw new Error('Failed to fetch agencies');
+        throw new Error('Failed to fetch casting companies');
       }
       const data = await response.json();
-      setCasting(data);
+      setCastings(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load agencies');
+      setError(err instanceof Error ? err.message : 'Failed to load casting companies');
     } finally {
       setLoading(false);
     }
   }, []);
 
-  const filterCasting = useCallback(() => {
-    let filtered = casting;
+  const filterCastings = useCallback(() => {
+    let filtered = castings;
 
     // Filter by company name
     if (searchFilters.companyName) {
@@ -77,8 +77,8 @@ export default function CastingManager() {
       );
     }
 
-    setFilteredCasting(filtered);
-  }, [casting, searchFilters]);
+    setFilteredCastings(filtered);
+  }, [castings, searchFilters]);
 
   const handleAdd = () => {
     setEditingCasting(null);
@@ -102,9 +102,9 @@ export default function CastingManager() {
 
   const handleDelete = async (castingNo: number) => {
     const confirmed = await confirm(
-      'Are you sure you want to delete this casting?\nThis action cannot be undone.',
+      'Are you sure you want to delete this casting company?\nThis action cannot be undone.',
       {
-        title: 'Delete Agency',
+        title: 'Delete Casting Company',
         confirmText: 'Delete',
         cancelText: 'Cancel',
         variant: 'danger'
@@ -119,12 +119,12 @@ export default function CastingManager() {
         });
         
         if (!response.ok) {
-          throw new Error('Failed to delete casting');
+          throw new Error('Failed to delete casting company');
         }
         
-        await loadAgencies();
+        await loadCastings();
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to delete agency');
+        setError(err instanceof Error ? err.message : 'Failed to delete casting company');
       } finally {
         setDeleting(prev => prev.filter(id => id !== castingNo));
       }
@@ -146,11 +146,11 @@ export default function CastingManager() {
         });
         
         if (!response.ok) {
-          throw new Error('Failed to update agency');
+          throw new Error('Failed to update casting company');
         }
       } else {
-        // Create new agency
-        const response = await fetch('/api/agencies', {
+        // Create new casting
+        const response = await fetch('/api/casting', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -159,15 +159,15 @@ export default function CastingManager() {
         });
         
         if (!response.ok) {
-          throw new Error('Failed to create agency');
+          throw new Error('Failed to create casting company');
         }
       }
       
       setShowFormModal(false);
       setEditingCasting(null);
-      await loadAgencies();
+      await loadCastings();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save agency');
+      setError(err instanceof Error ? err.message : 'Failed to save casting company');
     } finally {
       setSaving(false);
     }
@@ -179,10 +179,10 @@ export default function CastingManager() {
       setSearchFilters(filters);
       
       if (filters.companyName.trim() === '' && filters.market.trim() === '' && filters.unions.trim() === '') {
-        await loadAgencies();
+        await loadCastings();
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to search agencies');
+      setError(err instanceof Error ? err.message : 'Failed to search casting companies');
     } finally {
       setSearching(false);
     }
@@ -199,12 +199,12 @@ export default function CastingManager() {
 
   // Effects
   useEffect(() => {
-    loadAgencies();
-  }, [loadAgencies]);
+    loadCastings();
+  }, [loadCastings]);
 
   useEffect(() => {
-    filterCasting();
-  }, [casting, searchFilters, filterCasting]);
+    filterCastings();
+  }, [castings, searchFilters, filterCastings]);
 
   if (loading) {
     return (
@@ -220,7 +220,7 @@ export default function CastingManager() {
     <div className="rounded-sm border border-stroke bg-white px-5 pb-2.5 pt-6 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h4 className="text-xl font-semibold text-black dark:text-white">
-          Agencies Management
+          Casting Companies Management
         </h4>
         <div className="flex gap-3">
           <button
@@ -237,7 +237,7 @@ export default function CastingManager() {
             onClick={handleAdd}
             className="flex items-center justify-center rounded bg-primary px-6 py-2 font-medium text-gray hover:bg-opacity-90"
           >
-            Add Agency
+            Add Casting Company
           </button>
         </div>
       </div>
@@ -245,7 +245,7 @@ export default function CastingManager() {
       {/* Search Form */}
       {showSearchForm && (
         <div className="mb-6">
-          <AgencySearchForm
+          <CastingSearchForm
             onSearch={handleSearch}
             defaultFilters={searchFilters}
             searching={searching}
@@ -266,7 +266,7 @@ export default function CastingManager() {
       )}
 
       <CastingList
-        castings={filteredCasting}
+        castings={filteredCastings}
         onView={handleView}
         onEdit={handleEdit}
         onComments={handleComments}

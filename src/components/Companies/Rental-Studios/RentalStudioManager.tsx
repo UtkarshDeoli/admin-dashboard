@@ -5,7 +5,7 @@ import { RentalStudio } from "@/types/company";
 import CommentsModal from "@/components/common/CommentsModal";
 import ConfirmationDialog from "@/components/common/ConfirmationDialog";
 import { useConfirmation } from "@/hooks/useConfirmation";
-import AgencySearchForm from "../AgencySearchForm";
+import RentalStudioSearchForm from "./RentalStudioSearchForm";
 import RentalStudioList from "./RentalStudioList";
 import RentalStudioModal from "./RentalStudioModal";
 import RentalStudioViewModal from "./RentalStudioViewModal";
@@ -23,11 +23,9 @@ export default function RentalStudioManager() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchFilters, setSearchFilters] = useState({
+    companyName: '',
     name: '',
-    num_studios: '',
-    rate: '',
-    rate_frequency: ''
-
+    rateFrequency: ''
   });
   
   // Loading states for specific operations
@@ -58,31 +56,24 @@ export default function RentalStudioManager() {
   const filterRentalStudios = useCallback(() => {
     let filtered = rentalStudios;
 
+    // Filter by company name
+    if (searchFilters.companyName) {
+      filtered = filtered.filter(rentalStudio =>
+        (rentalStudio as any).company_name?.toLowerCase().includes(searchFilters.companyName.toLowerCase())
+      );
+    }
+
     // Filter by name
     if (searchFilters.name) {
       filtered = filtered.filter(rentalStudio =>
-        (rentalStudio as any).name?.toLowerCase().includes(searchFilters.name.toLowerCase())
-      );
-    }
-
-    // Filter by num_studios
-    if (searchFilters.num_studios) {
-      filtered = filtered.filter(rentalStudio =>
-        rentalStudio.num_studios?.toString().includes(searchFilters.num_studios)
-      );
-    }
-
-    // Filter by rate
-    if (searchFilters.rate) {
-      filtered = filtered.filter(rentalStudio =>
-        rentalStudio.rate?.toString().includes(searchFilters.rate)
+        rentalStudio.name?.toLowerCase().includes(searchFilters.name.toLowerCase())
       );
     }
 
     // Filter by rate_frequency
-    if (searchFilters.rate_frequency) {
+    if (searchFilters.rateFrequency) {
       filtered = filtered.filter(rentalStudio =>
-        rentalStudio.rate_frequency?.toString().includes(searchFilters.rate_frequency)
+        rentalStudio.rate_frequency?.toLowerCase().includes(searchFilters.rateFrequency.toLowerCase())
       );
     }
 
@@ -182,12 +173,12 @@ export default function RentalStudioManager() {
     }
   };
 
-  const handleSearch = async (filters: { name: string; num_studios: string; rate: string; rate_frequency: string }) => {
+  const handleSearch = async (filters: { companyName: string; name: string; rateFrequency: string }) => {
     try {
       setSearching(true);
       setSearchFilters(filters);
 
-      if (filters.name.trim() === '' && filters.num_studios.trim() === '' && filters.rate.trim() === '' && filters.rate_frequency.trim() === '') {
+      if (filters.companyName.trim() === '' && filters.name.trim() === '' && filters.rateFrequency.trim() === '') {
         await loadRentalStudios();
       }
     } catch (err) {
@@ -252,15 +243,15 @@ export default function RentalStudioManager() {
       </div>
 
       {/* Search Form */}
-      {/* {showSearchForm && (
+      {showSearchForm && (
         <div className="mb-6">
-          <AgencySearchForm
+          <RentalStudioSearchForm
             onSearch={handleSearch}
             defaultFilters={searchFilters}
             searching={searching}
           />
         </div>
-      )} */}
+      )}
 
       {error && (
         <div className="mb-4 rounded-sm border border-danger bg-danger bg-opacity-10 px-4 py-3 text-danger">

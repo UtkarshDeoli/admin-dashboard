@@ -8,7 +8,7 @@ import { useConfirmation } from "@/hooks/useConfirmation";
 import TheaterList from "./TheaterList";
 import TheaterModal from "./TheaterModal";
 import TheaterViewModal from "./TheaterViewModal";
-import AgencySearchForm from "../AgencySearchForm";
+import TheaterSearchForm from "./TheaterSearchForm";
 
 export default function TheaterManager() {
   const [theater, setTheater] = useState<Theater[]>([]);
@@ -24,9 +24,8 @@ export default function TheaterManager() {
   const [error, setError] = useState<string | null>(null);
   const [searchFilters, setSearchFilters] = useState({
     companyName: '',
-    summer: false,
-    musical: false,
-    community: false,
+    contract: '',
+    submissionPreference: '',
   });
   
   // Loading states for specific operations
@@ -64,24 +63,17 @@ export default function TheaterManager() {
       );
     }
 
-    // Filter by summer
-    if (searchFilters.summer) {
+    // Filter by contract
+    if (searchFilters.contract) {
       filtered = filtered.filter(theater =>
-        theater.summer === searchFilters.summer
+        theater.contract?.toLowerCase().includes(searchFilters.contract.toLowerCase())
       );
     }
 
-    // Filter by musical
-    if (searchFilters.musical) {
+    // Filter by submission preference
+    if (searchFilters.submissionPreference) {
       filtered = filtered.filter(theater =>
-        theater.musical === searchFilters.musical
-      );
-    }
-
-    // Filter by community
-    if (searchFilters.community) {
-      filtered = filtered.filter(theater =>
-        theater.community === searchFilters.community
+        theater.submission_preference?.toLowerCase().includes(searchFilters.submissionPreference.toLowerCase())
       );
     }
 
@@ -181,12 +173,12 @@ export default function TheaterManager() {
     }
   };
 
-  const handleSearch = async (filters: { companyName: string; summer: boolean; musical: boolean; community: boolean }) => {
+  const handleSearch = async (filters: { companyName: string; contract: string; submissionPreference: string }) => {
     try {
       setSearching(true);
       setSearchFilters(filters);
 
-      if (filters.companyName.trim() === '' && !filters.summer && !filters.musical && !filters.community) {
+      if (filters.companyName.trim() === '' && filters.contract.trim() === '' && filters.submissionPreference.trim() === '') {
         await loadTheaters();
       }
     } catch (err) {
@@ -251,15 +243,15 @@ export default function TheaterManager() {
       </div>
 
       {/* Search Form */}
-      {/* {showSearchForm && (
+      {showSearchForm && (
         <div className="mb-6">
-          <AgencySearchForm
+          <TheaterSearchForm
             onSearch={handleSearch}
             defaultFilters={searchFilters}
             searching={searching}
           />
         </div>
-      )} */}
+      )}
 
       {error && (
         <div className="mb-4 rounded-sm border border-danger bg-danger bg-opacity-10 px-4 py-3 text-danger">

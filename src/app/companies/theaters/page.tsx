@@ -4,11 +4,11 @@ import AuthGuard from "@/components/AuthGuard";
 import TheaterManager from "@/components/Companies/Theater/TheaterManager";
 
 export const metadata: Metadata = {
-  title: "Agencies | Admin Dashboard",
-  description: "Manage agencies in the admin dashboard",
+  title: "Theaters | Admin Dashboard",
+  description: "Manage theaters in the admin dashboard",
 };
 
-export default function Agencies() {
+export default function Theaters() {
   return (
     <AuthGuard>
       <DefaultLayout>

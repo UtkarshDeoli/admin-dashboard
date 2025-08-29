@@ -260,14 +260,14 @@ export default function CompaniesManager({ companyType = 'All' }: CompaniesManag
       />
 
       {/* Modals */}
-      {/* <CompanyModal
+      <CompanyModal
         isOpen={showFormModal}
         onClose={handleCancel}
         company={editingCompany}
         onSave={handleSave}
         saving={saving}
         defaultCompanyType={companyType === 'All' ? '' : companyType}
-      /> */}
+      />
 
       <CompanyViewModal
         isOpen={showViewModal}

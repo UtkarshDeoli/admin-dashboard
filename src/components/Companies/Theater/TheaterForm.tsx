@@ -1,34 +1,29 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Casting, Address } from "@/types/company";
-import { castingAPI, addressesAPI } from "@/lib/api";
+import { Theater } from "@/types/company";
 
-interface CastingFormProps {
+interface TheaterFormProps {
   companyId: number;
   onSave: () => void;
 }
 
-export default function CastingForm({ companyId, onSave }: CastingFormProps) {
-  const [casting, setCasting] = useState<Casting | null>(null);
-  const [addresses, setAddresses] = useState<Address[]>([]);
+export default function TheaterForm({ companyId, onSave }: TheaterFormProps) {
+  const [theater, setTheater] = useState<Theater | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isNewCasting, setIsNewCasting] = useState(false);
+  const [isNewTheater, setIsNewTheater] = useState(false);
 
   const [formData, setFormData] = useState({
-    address_no: 0,
-    contact1: '',
-    contact2: '',
     submission_preference: '',
-    casts_for: '',
-    seeking: '',
-    market: '',
-    unions: '',
-    talk_variey: false,
-    bi_coastal: false,
-    primetime: false,
+    literary_submission_preference: '',
+    contract: '',
+    production_compnay: false,
+    summer: false,
+    musical: false,
+    community: false,
+    outdoor: false,
   });
 
   const loadData = useCallback(async () => {
@@ -36,35 +31,32 @@ export default function CastingForm({ companyId, onSave }: CastingFormProps) {
       setLoading(true);
       setError(null);
       
-      // Load addresses for dropdown
-      const addressData = await addressesAPI.getAll();
-      setAddresses(addressData);
-      
-      // Try to load existing casting data
+      // Try to load existing theater data
       try {
-        const castingData = await castingAPI.getByCompany(companyId);
-        console.log('Casting data loaded:', castingData);
-        if (castingData) {
-          setCasting(castingData);
-          setFormData({
-            address_no: castingData.address_no,
-            contact1: castingData.contact1,
-            contact2: castingData.contact2,
-            submission_preference: castingData.submission_preference,
-            casts_for: castingData.casts_for,
-            seeking: castingData.seeking,
-            market: castingData.market,
-            unions: castingData.unions,
-            talk_variey: castingData.talk_variey,
-            bi_coastal: castingData.bi_coastal,
-            primetime: castingData.primetime,
-          });
-          setIsNewCasting(false);
+        const response = await fetch(`/api/companies/${companyId}/theater`);
+        if (response.ok) {
+          const theaterData = await response.json();
+          if (theaterData) {
+            setTheater(theaterData);
+            setFormData({
+              submission_preference: theaterData.submission_preference,
+              literary_submission_preference: theaterData.literary_submission_preference,
+              contract: theaterData.contract,
+              production_compnay: theaterData.production_compnay,
+              summer: theaterData.summer,
+              musical: theaterData.musical,
+              community: theaterData.community,
+              outdoor: theaterData.outdoor,
+            });
+            setIsNewTheater(false);
+          } else {
+            setIsNewTheater(true);
+          }
         } else {
-          setIsNewCasting(true);
+          setIsNewTheater(true);
         }
       } catch (err) {
-        setIsNewCasting(true);
+        setIsNewTheater(true);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load data');
@@ -92,21 +84,41 @@ export default function CastingForm({ companyId, onSave }: CastingFormProps) {
       setSaving(true);
       setError(null);
       
-      const castingData = {
+      const theaterData = {
         company_no: companyId,
         ...formData,
         archived: false
       };
       
-      if (isNewCasting) {
-        await castingAPI.create(castingData);
-      } else if (casting) {
-        await castingAPI.update(casting.casting_company_no, castingData);
+      if (isNewTheater) {
+        const response = await fetch('/api/theaters', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(theaterData),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to create theater');
+        }
+      } else if (theater) {
+        const response = await fetch(`/api/theaters/${theater.theater_no}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(theaterData),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to update theater');
+        }
       }
       
       onSave();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save casting data');
+      setError(err instanceof Error ? err.message : 'Failed to save theater data');
     } finally {
       setSaving(false);
     }
@@ -123,7 +135,7 @@ export default function CastingForm({ companyId, onSave }: CastingFormProps) {
   return (
     <div className="p-6.5">
       <h3 className="mb-6 text-lg font-semibold text-black dark:text-white">
-        Casting Company Information
+        Theater Information
       </h3>
 
       {error && (
@@ -134,52 +146,7 @@ export default function CastingForm({ companyId, onSave }: CastingFormProps) {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          {/* Address Selection */}
-          <div>
-            <label className="mb-2 block text-sm font-medium text-black dark:text-white">
-              Primary Address
-            </label>
-            <select
-              name="address_no"
-              value={formData.address_no}
-              onChange={handleInputChange}
-              className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
-            >
-              <option value={0}>Select an address</option>
-              {addresses.map((address) => (
-                <option key={address.address_no} value={address.address_no}>
-                  {address.line1}, {address.city}, {address.state}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-black dark:text-white">
-              Primary Contact
-            </label>
-            <input
-              type="text"
-              name="contact1"
-              value={formData.contact1}
-              onChange={handleInputChange}
-              className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-black dark:text-white">
-              Secondary Contact
-            </label>
-            <input
-              type="text"
-              name="contact2"
-              value={formData.contact2}
-              onChange={handleInputChange}
-              className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
-            />
-          </div>
-
+          {/* Submission Preference */}
           <div>
             <label className="mb-2 block text-sm font-medium text-black dark:text-white">
               Submission Preference
@@ -193,68 +160,45 @@ export default function CastingForm({ companyId, onSave }: CastingFormProps) {
             />
           </div>
 
+          {/* Literary Submission Preference */}
           <div>
             <label className="mb-2 block text-sm font-medium text-black dark:text-white">
-              Market
+              Literary Submission Preference
             </label>
             <input
               type="text"
-              name="market"
-              value={formData.market}
-              onChange={handleInputChange}
-              className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-black dark:text-white">
-              Unions
-            </label>
-            <input
-              type="text"
-              name="unions"
-              value={formData.unions}
+              name="literary_submission_preference"
+              value={formData.literary_submission_preference}
               onChange={handleInputChange}
               className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <div>
-            <label className="mb-2 block text-sm font-medium text-black dark:text-white">
-              Casts For
-            </label>
-            <textarea
-              name="casts_for"
-              value={formData.casts_for}
-              onChange={handleInputChange}
-              rows={4}
-              className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-black dark:text-white">
-              Seeking
-            </label>
-            <textarea
-              name="seeking"
-              value={formData.seeking}
-              onChange={handleInputChange}
-              rows={4}
-              className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
-            />
-          </div>
-        </div>
-
+        {/* Contract */}
         <div>
-          <h4 className="mb-4 text-md font-medium text-black dark:text-white">Casting Features</h4>
+          <label className="mb-2 block text-sm font-medium text-black dark:text-white">
+            Contract Information
+          </label>
+          <textarea
+            name="contract"
+            value={formData.contract}
+            onChange={handleInputChange}
+            rows={4}
+            className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+          />
+        </div>
+
+        {/* Theater Features */}
+        <div>
+          <h4 className="mb-4 text-md font-medium text-black dark:text-white">Theater Features</h4>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
             {[
-              { name: 'talk_variey', label: 'Talk/Variety' },
-              { name: 'bi_coastal', label: 'Bi-Coastal' },
-              { name: 'primetime', label: 'Primetime' },
+              { name: 'production_compnay', label: 'Production Company' },
+              { name: 'summer', label: 'Summer Theater' },
+              { name: 'musical', label: 'Musical Theater' },
+              { name: 'community', label: 'Community Theater' },
+              { name: 'outdoor', label: 'Outdoor Theater' },
             ].map((field) => (
               <div key={field.name} className="flex items-center">
                 <input
@@ -273,6 +217,7 @@ export default function CastingForm({ companyId, onSave }: CastingFormProps) {
           </div>
         </div>
 
+        {/* Submit Button */}
         <div className="flex justify-end">
           <button
             type="submit"
@@ -282,7 +227,7 @@ export default function CastingForm({ companyId, onSave }: CastingFormProps) {
             {saving ? (
               <div className="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
             ) : null}
-            {saving ? 'Saving...' : (isNewCasting ? 'Create Casting Company' : 'Update Casting Company')}
+            {saving ? 'Saving...' : (isNewTheater ? 'Create Theater' : 'Update Theater')}
           </button>
         </div>
       </form>

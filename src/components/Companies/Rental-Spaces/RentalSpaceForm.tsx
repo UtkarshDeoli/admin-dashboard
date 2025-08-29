@@ -1,34 +1,27 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Casting, Address } from "@/types/company";
-import { castingAPI, addressesAPI } from "@/lib/api";
+import { RentalSpace, Address } from "@/types/company";
 
-interface CastingFormProps {
+interface RentalSpaceFormProps {
   companyId: number;
   onSave: () => void;
 }
 
-export default function CastingForm({ companyId, onSave }: CastingFormProps) {
-  const [casting, setCasting] = useState<Casting | null>(null);
+export default function RentalSpaceForm({ companyId, onSave }: RentalSpaceFormProps) {
+  const [rentalSpace, setRentalSpace] = useState<RentalSpace | null>(null);
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isNewCasting, setIsNewCasting] = useState(false);
+  const [isNewRentalSpace, setIsNewRentalSpace] = useState(false);
 
   const [formData, setFormData] = useState({
     address_no: 0,
-    contact1: '',
-    contact2: '',
-    submission_preference: '',
-    casts_for: '',
-    seeking: '',
-    market: '',
-    unions: '',
-    talk_variey: false,
-    bi_coastal: false,
-    primetime: false,
+    name: '',
+    dimensions: '',
+    seats: 0,
+    space_type: '',
   });
 
   const loadData = useCallback(async () => {
@@ -37,34 +30,35 @@ export default function CastingForm({ companyId, onSave }: CastingFormProps) {
       setError(null);
       
       // Load addresses for dropdown
-      const addressData = await addressesAPI.getAll();
-      setAddresses(addressData);
+      const addressResponse = await fetch('/api/addresses');
+      if (addressResponse.ok) {
+        const addressData = await addressResponse.json();
+        setAddresses(addressData);
+      }
       
-      // Try to load existing casting data
+      // Try to load existing rental space data
       try {
-        const castingData = await castingAPI.getByCompany(companyId);
-        console.log('Casting data loaded:', castingData);
-        if (castingData) {
-          setCasting(castingData);
-          setFormData({
-            address_no: castingData.address_no,
-            contact1: castingData.contact1,
-            contact2: castingData.contact2,
-            submission_preference: castingData.submission_preference,
-            casts_for: castingData.casts_for,
-            seeking: castingData.seeking,
-            market: castingData.market,
-            unions: castingData.unions,
-            talk_variey: castingData.talk_variey,
-            bi_coastal: castingData.bi_coastal,
-            primetime: castingData.primetime,
-          });
-          setIsNewCasting(false);
+        const response = await fetch(`/api/companies/${companyId}/rental-space`);
+        if (response.ok) {
+          const rentalSpaceData = await response.json();
+          if (rentalSpaceData) {
+            setRentalSpace(rentalSpaceData);
+            setFormData({
+              address_no: rentalSpaceData.address_no,
+              name: rentalSpaceData.name,
+              dimensions: rentalSpaceData.dimensions,
+              seats: rentalSpaceData.seats,
+              space_type: rentalSpaceData.space_type,
+            });
+            setIsNewRentalSpace(false);
+          } else {
+            setIsNewRentalSpace(true);
+          }
         } else {
-          setIsNewCasting(true);
+          setIsNewRentalSpace(true);
         }
       } catch (err) {
-        setIsNewCasting(true);
+        setIsNewRentalSpace(true);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load data');
@@ -81,7 +75,7 @@ export default function CastingForm({ companyId, onSave }: CastingFormProps) {
     const { name, value, type } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+      [name]: type === 'number' ? parseInt(value) || 0 : value
     }));
   };
 
@@ -92,21 +86,41 @@ export default function CastingForm({ companyId, onSave }: CastingFormProps) {
       setSaving(true);
       setError(null);
       
-      const castingData = {
+      const rentalSpaceData = {
         company_no: companyId,
         ...formData,
         archived: false
       };
       
-      if (isNewCasting) {
-        await castingAPI.create(castingData);
-      } else if (casting) {
-        await castingAPI.update(casting.casting_company_no, castingData);
+      if (isNewRentalSpace) {
+        const response = await fetch('/api/rental-spaces', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(rentalSpaceData),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to create rental space');
+        }
+      } else if (rentalSpace) {
+        const response = await fetch(`/api/rental-spaces/${rentalSpace.space_no}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(rentalSpaceData),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to update rental space');
+        }
       }
       
       onSave();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save casting data');
+      setError(err instanceof Error ? err.message : 'Failed to save rental space data');
     } finally {
       setSaving(false);
     }
@@ -123,7 +137,7 @@ export default function CastingForm({ companyId, onSave }: CastingFormProps) {
   return (
     <div className="p-6.5">
       <h3 className="mb-6 text-lg font-semibold text-black dark:text-white">
-        Casting Company Information
+        Rental Space Information
       </h3>
 
       {error && (
@@ -145,134 +159,76 @@ export default function CastingForm({ companyId, onSave }: CastingFormProps) {
               onChange={handleInputChange}
               className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
             >
-              <option value={0}>Select an address</option>
+              <option value={0}>No address</option>
               {addresses.map((address) => (
                 <option key={address.address_no} value={address.address_no}>
-                  {address.line1}, {address.city}, {address.state}
+                  {`${address.line1}${address.line2 ? ', ' + address.line2 : ''}, ${address.city}, ${address.state} ${address.zip}`}
                 </option>
               ))}
             </select>
           </div>
 
+          {/* Name */}
           <div>
             <label className="mb-2 block text-sm font-medium text-black dark:text-white">
-              Primary Contact
+              Space Name
             </label>
             <input
               type="text"
-              name="contact1"
-              value={formData.contact1}
+              name="name"
+              value={formData.name}
               onChange={handleInputChange}
               className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
             />
           </div>
 
+          {/* Dimensions */}
           <div>
             <label className="mb-2 block text-sm font-medium text-black dark:text-white">
-              Secondary Contact
+              Dimensions
             </label>
             <input
               type="text"
-              name="contact2"
-              value={formData.contact2}
+              name="dimensions"
+              value={formData.dimensions}
               onChange={handleInputChange}
+              placeholder="e.g., 20x30 feet"
               className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
             />
           </div>
 
+          {/* Space Type */}
           <div>
             <label className="mb-2 block text-sm font-medium text-black dark:text-white">
-              Submission Preference
+              Space Type
             </label>
             <input
               type="text"
-              name="submission_preference"
-              value={formData.submission_preference}
+              name="space_type"
+              value={formData.space_type}
               onChange={handleInputChange}
+              placeholder="e.g., Studio, Conference Room, Theater, etc."
               className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
             />
           </div>
 
+          {/* Seats */}
           <div>
             <label className="mb-2 block text-sm font-medium text-black dark:text-white">
-              Market
+              Number of Seats
             </label>
             <input
-              type="text"
-              name="market"
-              value={formData.market}
+              type="number"
+              name="seats"
+              value={formData.seats}
               onChange={handleInputChange}
-              className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-black dark:text-white">
-              Unions
-            </label>
-            <input
-              type="text"
-              name="unions"
-              value={formData.unions}
-              onChange={handleInputChange}
+              min="0"
               className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <div>
-            <label className="mb-2 block text-sm font-medium text-black dark:text-white">
-              Casts For
-            </label>
-            <textarea
-              name="casts_for"
-              value={formData.casts_for}
-              onChange={handleInputChange}
-              rows={4}
-              className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-black dark:text-white">
-              Seeking
-            </label>
-            <textarea
-              name="seeking"
-              value={formData.seeking}
-              onChange={handleInputChange}
-              rows={4}
-              className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
-            />
-          </div>
-        </div>
-
-        <div>
-          <h4 className="mb-4 text-md font-medium text-black dark:text-white">Casting Features</h4>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-            {[
-              { name: 'talk_variey', label: 'Talk/Variety' },
-              { name: 'bi_coastal', label: 'Bi-Coastal' },
-              { name: 'primetime', label: 'Primetime' },
-            ].map((field) => (
-              <div key={field.name} className="flex items-center">
-                <input
-                  type="checkbox"
-                  id={field.name}
-                  name={field.name}
-                  checked={formData[field.name as keyof typeof formData] as boolean}
-                  onChange={handleInputChange}
-                  className="mr-2 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                />
-                <label htmlFor={field.name} className="text-sm text-black dark:text-white">
-                  {field.label}
-                </label>
-              </div>
-            ))}
-          </div>
-        </div>
-
+        {/* Submit Button */}
         <div className="flex justify-end">
           <button
             type="submit"
@@ -282,7 +238,7 @@ export default function CastingForm({ companyId, onSave }: CastingFormProps) {
             {saving ? (
               <div className="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
             ) : null}
-            {saving ? 'Saving...' : (isNewCasting ? 'Create Casting Company' : 'Update Casting Company')}
+            {saving ? 'Saving...' : (isNewRentalSpace ? 'Create Rental Space' : 'Update Rental Space')}
           </button>
         </div>
       </form>

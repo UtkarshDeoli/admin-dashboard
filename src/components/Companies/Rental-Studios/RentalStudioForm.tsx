@@ -1,34 +1,27 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Casting, Address } from "@/types/company";
-import { castingAPI, addressesAPI } from "@/lib/api";
+import { RentalStudio, Address } from "@/types/company";
 
-interface CastingFormProps {
+interface RentalStudioFormProps {
   companyId: number;
   onSave: () => void;
 }
 
-export default function CastingForm({ companyId, onSave }: CastingFormProps) {
-  const [casting, setCasting] = useState<Casting | null>(null);
+export default function RentalStudioForm({ companyId, onSave }: RentalStudioFormProps) {
+  const [rentalStudio, setRentalStudio] = useState<RentalStudio | null>(null);
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isNewCasting, setIsNewCasting] = useState(false);
+  const [isNewRentalStudio, setIsNewRentalStudio] = useState(false);
 
   const [formData, setFormData] = useState({
     address_no: 0,
-    contact1: '',
-    contact2: '',
-    submission_preference: '',
-    casts_for: '',
-    seeking: '',
-    market: '',
-    unions: '',
-    talk_variey: false,
-    bi_coastal: false,
-    primetime: false,
+    name: '',
+    num_studios: 0,
+    rate: 0,
+    rate_frequency: 'Hourly' as 'Hourly' | 'Daily' | 'Weekly' | 'Monthly',
   });
 
   const loadData = useCallback(async () => {
@@ -37,34 +30,35 @@ export default function CastingForm({ companyId, onSave }: CastingFormProps) {
       setError(null);
       
       // Load addresses for dropdown
-      const addressData = await addressesAPI.getAll();
-      setAddresses(addressData);
+      const addressResponse = await fetch('/api/addresses');
+      if (addressResponse.ok) {
+        const addressData = await addressResponse.json();
+        setAddresses(addressData);
+      }
       
-      // Try to load existing casting data
+      // Try to load existing rental studio data
       try {
-        const castingData = await castingAPI.getByCompany(companyId);
-        console.log('Casting data loaded:', castingData);
-        if (castingData) {
-          setCasting(castingData);
-          setFormData({
-            address_no: castingData.address_no,
-            contact1: castingData.contact1,
-            contact2: castingData.contact2,
-            submission_preference: castingData.submission_preference,
-            casts_for: castingData.casts_for,
-            seeking: castingData.seeking,
-            market: castingData.market,
-            unions: castingData.unions,
-            talk_variey: castingData.talk_variey,
-            bi_coastal: castingData.bi_coastal,
-            primetime: castingData.primetime,
-          });
-          setIsNewCasting(false);
+        const response = await fetch(`/api/companies/${companyId}/rental-studio`);
+        if (response.ok) {
+          const rentalStudioData = await response.json();
+          if (rentalStudioData) {
+            setRentalStudio(rentalStudioData);
+            setFormData({
+              address_no: rentalStudioData.address_no,
+              name: rentalStudioData.name,
+              num_studios: rentalStudioData.num_studios,
+              rate: rentalStudioData.rate,
+              rate_frequency: rentalStudioData.rate_frequency,
+            });
+            setIsNewRentalStudio(false);
+          } else {
+            setIsNewRentalStudio(true);
+          }
         } else {
-          setIsNewCasting(true);
+          setIsNewRentalStudio(true);
         }
       } catch (err) {
-        setIsNewCasting(true);
+        setIsNewRentalStudio(true);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load data');
@@ -81,7 +75,7 @@ export default function CastingForm({ companyId, onSave }: CastingFormProps) {
     const { name, value, type } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+      [name]: type === 'number' ? parseFloat(value) || 0 : value
     }));
   };
 
@@ -92,21 +86,41 @@ export default function CastingForm({ companyId, onSave }: CastingFormProps) {
       setSaving(true);
       setError(null);
       
-      const castingData = {
+      const rentalStudioData = {
         company_no: companyId,
         ...formData,
         archived: false
       };
       
-      if (isNewCasting) {
-        await castingAPI.create(castingData);
-      } else if (casting) {
-        await castingAPI.update(casting.casting_company_no, castingData);
+      if (isNewRentalStudio) {
+        const response = await fetch('/api/rental-studios', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(rentalStudioData),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to create rental studio');
+        }
+      } else if (rentalStudio) {
+        const response = await fetch(`/api/rental-studios/${rentalStudio.studio_no}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(rentalStudioData),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to update rental studio');
+        }
       }
       
       onSave();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save casting data');
+      setError(err instanceof Error ? err.message : 'Failed to save rental studio data');
     } finally {
       setSaving(false);
     }
@@ -123,7 +137,7 @@ export default function CastingForm({ companyId, onSave }: CastingFormProps) {
   return (
     <div className="p-6.5">
       <h3 className="mb-6 text-lg font-semibold text-black dark:text-white">
-        Casting Company Information
+        Rental Studio Information
       </h3>
 
       {error && (
@@ -145,134 +159,80 @@ export default function CastingForm({ companyId, onSave }: CastingFormProps) {
               onChange={handleInputChange}
               className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
             >
-              <option value={0}>Select an address</option>
+              <option value={0}>No address</option>
               {addresses.map((address) => (
                 <option key={address.address_no} value={address.address_no}>
-                  {address.line1}, {address.city}, {address.state}
+                  {`${address.line1}${address.line2 ? ', ' + address.line2 : ''}, ${address.city}, ${address.state} ${address.zip}`}
                 </option>
               ))}
             </select>
           </div>
 
+          {/* Studio Name */}
           <div>
             <label className="mb-2 block text-sm font-medium text-black dark:text-white">
-              Primary Contact
+              Studio Name
             </label>
             <input
               type="text"
-              name="contact1"
-              value={formData.contact1}
+              name="name"
+              value={formData.name}
               onChange={handleInputChange}
               className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
             />
           </div>
 
+          {/* Number of Studios */}
           <div>
             <label className="mb-2 block text-sm font-medium text-black dark:text-white">
-              Secondary Contact
+              Number of Studios
             </label>
             <input
-              type="text"
-              name="contact2"
-              value={formData.contact2}
+              type="number"
+              name="num_studios"
+              value={formData.num_studios}
               onChange={handleInputChange}
+              min="0"
               className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
             />
           </div>
 
+          {/* Rate */}
           <div>
             <label className="mb-2 block text-sm font-medium text-black dark:text-white">
-              Submission Preference
+              Rate ($)
             </label>
             <input
-              type="text"
-              name="submission_preference"
-              value={formData.submission_preference}
+              type="number"
+              name="rate"
+              value={formData.rate}
               onChange={handleInputChange}
+              min="0"
+              step="0.01"
               className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
             />
           </div>
 
+          {/* Rate Frequency */}
           <div>
             <label className="mb-2 block text-sm font-medium text-black dark:text-white">
-              Market
+              Rate Frequency
             </label>
-            <input
-              type="text"
-              name="market"
-              value={formData.market}
+            <select
+              name="rate_frequency"
+              value={formData.rate_frequency}
               onChange={handleInputChange}
               className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-black dark:text-white">
-              Unions
-            </label>
-            <input
-              type="text"
-              name="unions"
-              value={formData.unions}
-              onChange={handleInputChange}
-              className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
-            />
+            >
+              <option value="Hourly">Hourly</option>
+              <option value="Daily">Daily</option>
+              <option value="Weekly">Weekly</option>
+              <option value="Monthly">Monthly</option>
+            </select>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <div>
-            <label className="mb-2 block text-sm font-medium text-black dark:text-white">
-              Casts For
-            </label>
-            <textarea
-              name="casts_for"
-              value={formData.casts_for}
-              onChange={handleInputChange}
-              rows={4}
-              className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-black dark:text-white">
-              Seeking
-            </label>
-            <textarea
-              name="seeking"
-              value={formData.seeking}
-              onChange={handleInputChange}
-              rows={4}
-              className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
-            />
-          </div>
-        </div>
-
-        <div>
-          <h4 className="mb-4 text-md font-medium text-black dark:text-white">Casting Features</h4>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-            {[
-              { name: 'talk_variey', label: 'Talk/Variety' },
-              { name: 'bi_coastal', label: 'Bi-Coastal' },
-              { name: 'primetime', label: 'Primetime' },
-            ].map((field) => (
-              <div key={field.name} className="flex items-center">
-                <input
-                  type="checkbox"
-                  id={field.name}
-                  name={field.name}
-                  checked={formData[field.name as keyof typeof formData] as boolean}
-                  onChange={handleInputChange}
-                  className="mr-2 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                />
-                <label htmlFor={field.name} className="text-sm text-black dark:text-white">
-                  {field.label}
-                </label>
-              </div>
-            ))}
-          </div>
-        </div>
-
+        {/* Submit Button */}
         <div className="flex justify-end">
           <button
             type="submit"
@@ -282,7 +242,7 @@ export default function CastingForm({ companyId, onSave }: CastingFormProps) {
             {saving ? (
               <div className="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
             ) : null}
-            {saving ? 'Saving...' : (isNewCasting ? 'Create Casting Company' : 'Update Casting Company')}
+            {saving ? 'Saving...' : (isNewRentalStudio ? 'Create Rental Studio' : 'Update Rental Studio')}
           </button>
         </div>
       </form>

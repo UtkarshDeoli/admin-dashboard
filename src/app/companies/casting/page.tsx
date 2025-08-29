@@ -4,11 +4,11 @@ import AuthGuard from "@/components/AuthGuard";
 import CastingManager from "@/components/Companies/Casting/CastingManager";
 
 export const metadata: Metadata = {
-  title: "Agencies | Admin Dashboard",
-  description: "Manage agencies in the admin dashboard",
+  title: "Casting | Admin Dashboard",
+  description: "Manage casting companies in the admin dashboard",
 };
 
-export default function Agencies() {
+export default function Casting() {
   return (
     <AuthGuard>
       <DefaultLayout>

@@ -1,34 +1,33 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Casting, Address } from "@/types/company";
-import { castingAPI, addressesAPI } from "@/lib/api";
+import { School } from "@/types/company";
 
-interface CastingFormProps {
+interface SchoolFormProps {
   companyId: number;
   onSave: () => void;
 }
 
-export default function CastingForm({ companyId, onSave }: CastingFormProps) {
-  const [casting, setCasting] = useState<Casting | null>(null);
-  const [addresses, setAddresses] = useState<Address[]>([]);
+export default function SchoolForm({ companyId, onSave }: SchoolFormProps) {
+  const [school, setSchool] = useState<School | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isNewCasting, setIsNewCasting] = useState(false);
+  const [isNewSchool, setIsNewSchool] = useState(false);
 
   const [formData, setFormData] = useState({
-    address_no: 0,
-    contact1: '',
-    contact2: '',
-    submission_preference: '',
-    casts_for: '',
-    seeking: '',
-    market: '',
-    unions: '',
-    talk_variey: false,
+    policy: '',
+    technique: '',
+    audit: false,
+    coaching: false,
+    showcase: false,
     bi_coastal: false,
-    primetime: false,
+    online: false,
+    in_person: false,
+    class_size_min: 0,
+    class_size_max: 0,
+    age_min: 0,
+    age_max: 0,
   });
 
   const loadData = useCallback(async () => {
@@ -36,35 +35,37 @@ export default function CastingForm({ companyId, onSave }: CastingFormProps) {
       setLoading(true);
       setError(null);
       
-      // Load addresses for dropdown
-      const addressData = await addressesAPI.getAll();
-      setAddresses(addressData);
-      
-      // Try to load existing casting data
+      // Try to load existing school data
       try {
-        const castingData = await castingAPI.getByCompany(companyId);
-        console.log('Casting data loaded:', castingData);
-        if (castingData) {
-          setCasting(castingData);
-          setFormData({
-            address_no: castingData.address_no,
-            contact1: castingData.contact1,
-            contact2: castingData.contact2,
-            submission_preference: castingData.submission_preference,
-            casts_for: castingData.casts_for,
-            seeking: castingData.seeking,
-            market: castingData.market,
-            unions: castingData.unions,
-            talk_variey: castingData.talk_variey,
-            bi_coastal: castingData.bi_coastal,
-            primetime: castingData.primetime,
-          });
-          setIsNewCasting(false);
+        const response = await fetch(`/api/companies/${companyId}/school`);
+        if (response.ok) {
+          const schoolData = await response.json();
+          console.log('School data loaded:', schoolData);
+          if (schoolData) {
+            setSchool(schoolData);
+            setFormData({
+              policy: schoolData.policy || '',
+              technique: schoolData.technique || '',
+              audit: schoolData.audit || false,
+              coaching: schoolData.coaching || false,
+              showcase: schoolData.showcase || false,
+              bi_coastal: schoolData.bi_coastal || false,
+              online: schoolData.online || false,
+              in_person: schoolData.in_person || false,
+              class_size_min: schoolData.class_size_min || 0,
+              class_size_max: schoolData.class_size_max || 0,
+              age_min: schoolData.age_min || 0,
+              age_max: schoolData.age_max || 0,
+            });
+            setIsNewSchool(false);
+          } else {
+            setIsNewSchool(true);
+          }
         } else {
-          setIsNewCasting(true);
+          setIsNewSchool(true);
         }
       } catch (err) {
-        setIsNewCasting(true);
+        setIsNewSchool(true);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load data');
@@ -81,7 +82,8 @@ export default function CastingForm({ companyId, onSave }: CastingFormProps) {
     const { name, value, type } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : 
+               type === 'number' ? parseInt(value) || 0 : value
     }));
   };
 
@@ -92,21 +94,38 @@ export default function CastingForm({ companyId, onSave }: CastingFormProps) {
       setSaving(true);
       setError(null);
       
-      const castingData = {
+      const schoolData = {
         company_no: companyId,
         ...formData,
         archived: false
       };
       
-      if (isNewCasting) {
-        await castingAPI.create(castingData);
-      } else if (casting) {
-        await castingAPI.update(casting.casting_company_no, castingData);
+      let response;
+      if (isNewSchool) {
+        response = await fetch('/api/schools', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(schoolData),
+        });
+      } else if (school) {
+        response = await fetch(`/api/schools/${school.school_no}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(schoolData),
+        });
+      }
+      
+      if (!response?.ok) {
+        throw new Error('Failed to save school data');
       }
       
       onSave();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save casting data');
+      setError(err instanceof Error ? err.message : 'Failed to save school data');
     } finally {
       setSaving(false);
     }
@@ -123,7 +142,7 @@ export default function CastingForm({ companyId, onSave }: CastingFormProps) {
   return (
     <div className="p-6.5">
       <h3 className="mb-6 text-lg font-semibold text-black dark:text-white">
-        Casting Company Information
+        School Information
       </h3>
 
       {error && (
@@ -134,127 +153,111 @@ export default function CastingForm({ companyId, onSave }: CastingFormProps) {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          {/* Address Selection */}
           <div>
             <label className="mb-2 block text-sm font-medium text-black dark:text-white">
-              Primary Address
-            </label>
-            <select
-              name="address_no"
-              value={formData.address_no}
-              onChange={handleInputChange}
-              className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
-            >
-              <option value={0}>Select an address</option>
-              {addresses.map((address) => (
-                <option key={address.address_no} value={address.address_no}>
-                  {address.line1}, {address.city}, {address.state}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-black dark:text-white">
-              Primary Contact
-            </label>
-            <input
-              type="text"
-              name="contact1"
-              value={formData.contact1}
-              onChange={handleInputChange}
-              className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-black dark:text-white">
-              Secondary Contact
-            </label>
-            <input
-              type="text"
-              name="contact2"
-              value={formData.contact2}
-              onChange={handleInputChange}
-              className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-black dark:text-white">
-              Submission Preference
-            </label>
-            <input
-              type="text"
-              name="submission_preference"
-              value={formData.submission_preference}
-              onChange={handleInputChange}
-              className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-black dark:text-white">
-              Market
-            </label>
-            <input
-              type="text"
-              name="market"
-              value={formData.market}
-              onChange={handleInputChange}
-              className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-black dark:text-white">
-              Unions
-            </label>
-            <input
-              type="text"
-              name="unions"
-              value={formData.unions}
-              onChange={handleInputChange}
-              className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <div>
-            <label className="mb-2 block text-sm font-medium text-black dark:text-white">
-              Casts For
+              School Policy
             </label>
             <textarea
-              name="casts_for"
-              value={formData.casts_for}
+              name="policy"
+              value={formData.policy}
               onChange={handleInputChange}
               rows={4}
               className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+              placeholder="Enter school policy details..."
             />
           </div>
 
           <div>
             <label className="mb-2 block text-sm font-medium text-black dark:text-white">
-              Seeking
+              Teaching Technique
             </label>
             <textarea
-              name="seeking"
-              value={formData.seeking}
+              name="technique"
+              value={formData.technique}
               onChange={handleInputChange}
               rows={4}
               className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+              placeholder="Enter teaching techniques and methods..."
             />
           </div>
         </div>
 
         <div>
-          <h4 className="mb-4 text-md font-medium text-black dark:text-white">Casting Features</h4>
+          <h4 className="mb-4 text-md font-medium text-black dark:text-white">Class Size</h4>
+          <div className="grid grid-cols-2 gap-6">
+            <div>
+              <label className="mb-2 block text-sm font-medium text-black dark:text-white">
+                Minimum Class Size
+              </label>
+              <input
+                type="number"
+                name="class_size_min"
+                value={formData.class_size_min}
+                onChange={handleInputChange}
+                min="0"
+                className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-black dark:text-white">
+                Maximum Class Size
+              </label>
+              <input
+                type="number"
+                name="class_size_max"
+                value={formData.class_size_max}
+                onChange={handleInputChange}
+                min="0"
+                className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h4 className="mb-4 text-md font-medium text-black dark:text-white">Age Range</h4>
+          <div className="grid grid-cols-2 gap-6">
+            <div>
+              <label className="mb-2 block text-sm font-medium text-black dark:text-white">
+                Minimum Age
+              </label>
+              <input
+                type="number"
+                name="age_min"
+                value={formData.age_min}
+                onChange={handleInputChange}
+                min="0"
+                className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-black dark:text-white">
+                Maximum Age
+              </label>
+              <input
+                type="number"
+                name="age_max"
+                value={formData.age_max}
+                onChange={handleInputChange}
+                min="0"
+                className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h4 className="mb-4 text-md font-medium text-black dark:text-white">School Features</h4>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
             {[
-              { name: 'talk_variey', label: 'Talk/Variety' },
-              { name: 'bi_coastal', label: 'Bi-Coastal' },
-              { name: 'primetime', label: 'Primetime' },
+              { name: 'audit', label: 'Audit Classes' },
+              { name: 'coaching', label: 'Coaching Available' },
+              { name: 'showcase', label: 'Student Showcases' },
+              { name: 'bi_coastal', label: 'Bi-Coastal Locations' },
+              { name: 'online', label: 'Online Classes' },
+              { name: 'in_person', label: 'In-Person Classes' },
             ].map((field) => (
               <div key={field.name} className="flex items-center">
                 <input
@@ -282,7 +285,7 @@ export default function CastingForm({ companyId, onSave }: CastingFormProps) {
             {saving ? (
               <div className="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
             ) : null}
-            {saving ? 'Saving...' : (isNewCasting ? 'Create Casting Company' : 'Update Casting Company')}
+            {saving ? 'Saving...' : (isNewSchool ? 'Create School' : 'Update School')}
           </button>
         </div>
       </form>

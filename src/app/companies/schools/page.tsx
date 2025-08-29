@@ -4,11 +4,11 @@ import AuthGuard from "@/components/AuthGuard";
 import SchoolManager from "@/components/Companies/School/SchoolManager";
 
 export const metadata: Metadata = {
-  title: "Agencies | Admin Dashboard",
-  description: "Manage agencies in the admin dashboard",
+  title: "Schools | Admin Dashboard",
+  description: "Manage schools in the admin dashboard",
 };
 
-export default function Agencies() {
+export default function Schools() {
   return (
     <AuthGuard>
       <DefaultLayout>
