@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { RentalStudio, Address } from "@/types/company";
-import { rentalStudiosAPI, addressesAPI } from "@/lib/api";
 
 interface RentalStudioFormProps {
   companyId: number;
@@ -31,23 +30,30 @@ export default function RentalStudioForm({ companyId, onSave }: RentalStudioForm
       setError(null);
       
       // Load addresses for dropdown
-      const addressData = await addressesAPI.getAll();
-      setAddresses(addressData);
+      const addressResponse = await fetch('/api/addresses');
+      if (addressResponse.ok) {
+        const addressData = await addressResponse.json();
+        setAddresses(addressData);
+      }
       
       // Try to load existing rental studio data
       try {
-        const rentalStudioData = await rentalStudiosAPI.getByCompany(companyId);
-        if (rentalStudioData) {
-          console.log('Rental Studio Data:', rentalStudioData);
-          setFormData({
-            address_no: rentalStudioData.address_no,
-            name: rentalStudioData.name,
-            num_studios: rentalStudioData.num_studios,
-            rate: rentalStudioData.rate,
-            rate_frequency: rentalStudioData.rate_frequency,
-          });
-          setRentalStudio(rentalStudioData);
-          setIsNewRentalStudio(false);
+        const response = await fetch(`/api/companies/${companyId}/rental-studio`);
+        if (response.ok) {
+          const rentalStudioData = await response.json();
+          if (rentalStudioData) {
+            setRentalStudio(rentalStudioData);
+            setFormData({
+              address_no: rentalStudioData.address_no,
+              name: rentalStudioData.name,
+              num_studios: rentalStudioData.num_studios,
+              rate: rentalStudioData.rate,
+              rate_frequency: rentalStudioData.rate_frequency,
+            });
+            setIsNewRentalStudio(false);
+          } else {
+            setIsNewRentalStudio(true);
+          }
         } else {
           setIsNewRentalStudio(true);
         }
@@ -87,9 +93,29 @@ export default function RentalStudioForm({ companyId, onSave }: RentalStudioForm
       };
       
       if (isNewRentalStudio) {
-        await rentalStudiosAPI.create(rentalStudioData);
+        const response = await fetch('/api/rental-studios', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(rentalStudioData),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to create rental studio');
+        }
       } else if (rentalStudio) {
-        await rentalStudiosAPI.update(rentalStudio.studio_no, rentalStudioData);
+        const response = await fetch(`/api/rental-studios/${rentalStudio.studio_no}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(rentalStudioData),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to update rental studio');
+        }
       }
       
       onSave();
@@ -133,15 +159,16 @@ export default function RentalStudioForm({ companyId, onSave }: RentalStudioForm
               onChange={handleInputChange}
               className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
             >
-              <option value={0}>Select an address</option>
+              <option value={0}>No address</option>
               {addresses.map((address) => (
                 <option key={address.address_no} value={address.address_no}>
-                  {address.line1}, {address.city}, {address.state}
+                  {`${address.line1}${address.line2 ? ', ' + address.line2 : ''}, ${address.city}, ${address.state} ${address.zip}`}
                 </option>
               ))}
             </select>
           </div>
 
+          {/* Studio Name */}
           <div>
             <label className="mb-2 block text-sm font-medium text-black dark:text-white">
               Studio Name
@@ -155,6 +182,7 @@ export default function RentalStudioForm({ companyId, onSave }: RentalStudioForm
             />
           </div>
 
+          {/* Number of Studios */}
           <div>
             <label className="mb-2 block text-sm font-medium text-black dark:text-white">
               Number of Studios
@@ -169,22 +197,24 @@ export default function RentalStudioForm({ companyId, onSave }: RentalStudioForm
             />
           </div>
 
+          {/* Rate */}
           <div>
             <label className="mb-2 block text-sm font-medium text-black dark:text-white">
-              Rate
+              Rate ($)
             </label>
             <input
               type="number"
               name="rate"
               value={formData.rate}
               onChange={handleInputChange}
-              step="0.01"
               min="0"
+              step="0.01"
               className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
             />
           </div>
 
-          <div className="md:col-span-2">
+          {/* Rate Frequency */}
+          <div>
             <label className="mb-2 block text-sm font-medium text-black dark:text-white">
               Rate Frequency
             </label>
@@ -202,6 +232,7 @@ export default function RentalStudioForm({ companyId, onSave }: RentalStudioForm
           </div>
         </div>
 
+        {/* Submit Button */}
         <div className="flex justify-end">
           <button
             type="submit"

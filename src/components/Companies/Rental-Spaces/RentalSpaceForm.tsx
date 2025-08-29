@@ -2,9 +2,6 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { RentalSpace, Address } from "@/types/company";
-import { rentalSpacesAPI, addressesAPI } from "@/lib/api";
-import { arch } from "os";
-import { space } from "postcss/lib/list";
 
 interface RentalSpaceFormProps {
   companyId: number;
@@ -25,8 +22,6 @@ export default function RentalSpaceForm({ companyId, onSave }: RentalSpaceFormPr
     dimensions: '',
     seats: 0,
     space_type: '',
-    space_no: 0,
-    archived: false,
   });
 
   const loadData = useCallback(async () => {
@@ -35,25 +30,31 @@ export default function RentalSpaceForm({ companyId, onSave }: RentalSpaceFormPr
       setError(null);
       
       // Load addresses for dropdown
-      const addressData = await addressesAPI.getAll();
-      setAddresses(addressData);
+      const addressResponse = await fetch('/api/addresses');
+      if (addressResponse.ok) {
+        const addressData = await addressResponse.json();
+        setAddresses(addressData);
+      }
+      
       // Try to load existing rental space data
       try {
-        const rentalSpaceData = await rentalSpacesAPI.getByCompany(companyId);
-        if (rentalSpaceData) {
-          setRentalSpace(rentalSpaceData);
-          setFormData({
-            address_no: rentalSpaceData.address_no,
-            name: rentalSpaceData.name,
-            dimensions: rentalSpaceData.dimensions,
-            seats: rentalSpaceData.seats,
-            space_type: rentalSpaceData.space_type,
-            space_no: rentalSpaceData.space_no,
-            archived: rentalSpaceData.archived,
-          });
-          setIsNewRentalSpace(false);
+        const response = await fetch(`/api/companies/${companyId}/rental-space`);
+        if (response.ok) {
+          const rentalSpaceData = await response.json();
+          if (rentalSpaceData) {
+            setRentalSpace(rentalSpaceData);
+            setFormData({
+              address_no: rentalSpaceData.address_no,
+              name: rentalSpaceData.name,
+              dimensions: rentalSpaceData.dimensions,
+              seats: rentalSpaceData.seats,
+              space_type: rentalSpaceData.space_type,
+            });
+            setIsNewRentalSpace(false);
+          } else {
+            setIsNewRentalSpace(true);
+          }
         } else {
-          console.log('Inside else')
           setIsNewRentalSpace(true);
         }
       } catch (err) {
@@ -92,9 +93,29 @@ export default function RentalSpaceForm({ companyId, onSave }: RentalSpaceFormPr
       };
       
       if (isNewRentalSpace) {
-        await rentalSpacesAPI.create(rentalSpaceData);
+        const response = await fetch('/api/rental-spaces', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(rentalSpaceData),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to create rental space');
+        }
       } else if (rentalSpace) {
-        await rentalSpacesAPI.update(rentalSpace.space_no, rentalSpaceData);
+        const response = await fetch(`/api/rental-spaces/${rentalSpace.space_no}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(rentalSpaceData),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to update rental space');
+        }
       }
       
       onSave();
@@ -138,15 +159,16 @@ export default function RentalSpaceForm({ companyId, onSave }: RentalSpaceFormPr
               onChange={handleInputChange}
               className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
             >
-              <option value={0}>Select an address</option>
+              <option value={0}>No address</option>
               {addresses.map((address) => (
                 <option key={address.address_no} value={address.address_no}>
-                  {address.line1}, {address.city}, {address.state}
+                  {`${address.line1}${address.line2 ? ', ' + address.line2 : ''}, ${address.city}, ${address.state} ${address.zip}`}
                 </option>
               ))}
             </select>
           </div>
 
+          {/* Name */}
           <div>
             <label className="mb-2 block text-sm font-medium text-black dark:text-white">
               Space Name
@@ -160,6 +182,22 @@ export default function RentalSpaceForm({ companyId, onSave }: RentalSpaceFormPr
             />
           </div>
 
+          {/* Dimensions */}
+          <div>
+            <label className="mb-2 block text-sm font-medium text-black dark:text-white">
+              Dimensions
+            </label>
+            <input
+              type="text"
+              name="dimensions"
+              value={formData.dimensions}
+              onChange={handleInputChange}
+              placeholder="e.g., 20x30 feet"
+              className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+            />
+          </div>
+
+          {/* Space Type */}
           <div>
             <label className="mb-2 block text-sm font-medium text-black dark:text-white">
               Space Type
@@ -169,11 +207,12 @@ export default function RentalSpaceForm({ companyId, onSave }: RentalSpaceFormPr
               name="space_type"
               value={formData.space_type}
               onChange={handleInputChange}
-              placeholder="e.g., Theater, Studio, Event Space"
+              placeholder="e.g., Studio, Conference Room, Theater, etc."
               className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
             />
           </div>
 
+          {/* Seats */}
           <div>
             <label className="mb-2 block text-sm font-medium text-black dark:text-white">
               Number of Seats
@@ -189,20 +228,7 @@ export default function RentalSpaceForm({ companyId, onSave }: RentalSpaceFormPr
           </div>
         </div>
 
-        <div>
-          <label className="mb-2 block text-sm font-medium text-black dark:text-white">
-            Dimensions
-          </label>
-          <textarea
-            name="dimensions"
-            value={formData.dimensions}
-            onChange={handleInputChange}
-            rows={3}
-            placeholder="Describe the space dimensions, layout, technical specs, etc."
-            className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
-          />
-        </div>
-
+        {/* Submit Button */}
         <div className="flex justify-end">
           <button
             type="submit"

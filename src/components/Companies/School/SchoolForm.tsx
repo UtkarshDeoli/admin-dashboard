@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { School } from "@/types/company";
-import { schoolsAPI } from "@/lib/api";
 
 interface SchoolFormProps {
   companyId: number;
@@ -38,25 +37,30 @@ export default function SchoolForm({ companyId, onSave }: SchoolFormProps) {
       
       // Try to load existing school data
       try {
-        const schoolData = await schoolsAPI.getByCompany(companyId);
-        console.log('School data:', schoolData);
-        if (schoolData) {
-          setSchool(schoolData);
-          setFormData({
-            policy: schoolData.policy,
-            technique: schoolData.technique,
-            audit: schoolData.audit,
-            coaching: schoolData.coaching,
-            showcase: schoolData.showcase,
-            bi_coastal: schoolData.bi_coastal,
-            online: schoolData.online,
-            in_person: schoolData.in_person,
-            class_size_min: schoolData.class_size_min,
-            class_size_max: schoolData.class_size_max,
-            age_min: schoolData.age_min,
-            age_max: schoolData.age_max,
-          });
-          setIsNewSchool(false);
+        const response = await fetch(`/api/companies/${companyId}/school`);
+        if (response.ok) {
+          const schoolData = await response.json();
+          console.log('School data loaded:', schoolData);
+          if (schoolData) {
+            setSchool(schoolData);
+            setFormData({
+              policy: schoolData.policy || '',
+              technique: schoolData.technique || '',
+              audit: schoolData.audit || false,
+              coaching: schoolData.coaching || false,
+              showcase: schoolData.showcase || false,
+              bi_coastal: schoolData.bi_coastal || false,
+              online: schoolData.online || false,
+              in_person: schoolData.in_person || false,
+              class_size_min: schoolData.class_size_min || 0,
+              class_size_max: schoolData.class_size_max || 0,
+              age_min: schoolData.age_min || 0,
+              age_max: schoolData.age_max || 0,
+            });
+            setIsNewSchool(false);
+          } else {
+            setIsNewSchool(true);
+          }
         } else {
           setIsNewSchool(true);
         }
@@ -96,10 +100,27 @@ export default function SchoolForm({ companyId, onSave }: SchoolFormProps) {
         archived: false
       };
       
+      let response;
       if (isNewSchool) {
-        await schoolsAPI.create(schoolData);
+        response = await fetch('/api/schools', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(schoolData),
+        });
       } else if (school) {
-        await schoolsAPI.update(school.school_no, schoolData);
+        response = await fetch(`/api/schools/${school.school_no}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(schoolData),
+        });
+      }
+      
+      if (!response?.ok) {
+        throw new Error('Failed to save school data');
       }
       
       onSave();
@@ -134,36 +155,36 @@ export default function SchoolForm({ companyId, onSave }: SchoolFormProps) {
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <div>
             <label className="mb-2 block text-sm font-medium text-black dark:text-white">
-              Policy
+              School Policy
             </label>
             <textarea
               name="policy"
               value={formData.policy}
               onChange={handleInputChange}
-              rows={3}
-              placeholder="School policies, rules, requirements..."
+              rows={4}
               className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+              placeholder="Enter school policy details..."
             />
           </div>
 
           <div>
             <label className="mb-2 block text-sm font-medium text-black dark:text-white">
-              Technique
+              Teaching Technique
             </label>
             <textarea
               name="technique"
               value={formData.technique}
               onChange={handleInputChange}
-              rows={3}
-              placeholder="Teaching techniques, methods, approaches..."
+              rows={4}
               className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+              placeholder="Enter teaching techniques and methods..."
             />
           </div>
         </div>
 
         <div>
-          <h4 className="mb-4 text-md font-medium text-black dark:text-white">Class Size Range</h4>
-          <div className="grid grid-cols-2 gap-4">
+          <h4 className="mb-4 text-md font-medium text-black dark:text-white">Class Size</h4>
+          <div className="grid grid-cols-2 gap-6">
             <div>
               <label className="mb-2 block text-sm font-medium text-black dark:text-white">
                 Minimum Class Size
@@ -196,7 +217,7 @@ export default function SchoolForm({ companyId, onSave }: SchoolFormProps) {
 
         <div>
           <h4 className="mb-4 text-md font-medium text-black dark:text-white">Age Range</h4>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-6">
             <div>
               <label className="mb-2 block text-sm font-medium text-black dark:text-white">
                 Minimum Age
@@ -228,35 +249,13 @@ export default function SchoolForm({ companyId, onSave }: SchoolFormProps) {
         </div>
 
         <div>
-          <h4 className="mb-4 text-md font-medium text-black dark:text-white">School Features & Services</h4>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <h4 className="mb-4 text-md font-medium text-black dark:text-white">School Features</h4>
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
             {[
               { name: 'audit', label: 'Audit Classes' },
-              { name: 'coaching', label: 'Coaching' },
-              { name: 'showcase', label: 'Showcase' },
-              { name: 'bi_coastal', label: 'Bi-Coastal' },
-            ].map((field) => (
-              <div key={field.name} className="flex items-center">
-                <input
-                  type="checkbox"
-                  id={field.name}
-                  name={field.name}
-                  checked={formData[field.name as keyof typeof formData] as boolean}
-                  onChange={handleInputChange}
-                  className="mr-2 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                />
-                <label htmlFor={field.name} className="text-sm text-black dark:text-white">
-                  {field.label}
-                </label>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <h4 className="mb-4 text-md font-medium text-black dark:text-white">Delivery Methods</h4>
-          <div className="grid grid-cols-2 gap-4">
-            {[
+              { name: 'coaching', label: 'Coaching Available' },
+              { name: 'showcase', label: 'Student Showcases' },
+              { name: 'bi_coastal', label: 'Bi-Coastal Locations' },
               { name: 'online', label: 'Online Classes' },
               { name: 'in_person', label: 'In-Person Classes' },
             ].map((field) => (

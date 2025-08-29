@@ -70,6 +70,32 @@ const menuGroups = [
         ),
         label: "Companies",
         route: "/companies",
+        children: [
+          {
+            label: "Agencies",
+            route: "/companies/agencies",
+          },
+          {
+            label: "Casting",
+            route: "/companies/casting",
+          },
+          {
+            label: "Rental Spaces",
+            route: "/companies/rental-spaces",
+          },
+          {
+            label: "Rental Studios",
+            route: "/companies/rental-studios",
+          },
+          {
+            label: "Schools",
+            route: "/companies/schools",
+          },
+          {
+            label: "Theaters",
+            route: "/companies/theaters",
+          },
+        ],
       },
       {
         icon: (

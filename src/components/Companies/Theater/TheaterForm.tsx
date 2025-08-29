@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { Theater } from "@/types/company";
-import { theatersAPI } from "@/lib/api";
 
 interface TheaterFormProps {
   companyId: number;
@@ -34,20 +33,25 @@ export default function TheaterForm({ companyId, onSave }: TheaterFormProps) {
       
       // Try to load existing theater data
       try {
-        const theaterData = await theatersAPI.getByCompany(companyId);
-        if (theaterData) {
-          setTheater(theaterData);
-          setFormData({
-            submission_preference: theaterData.submission_preference,
-            literary_submission_preference: theaterData.literary_submission_preference,
-            contract: theaterData.contract,
-            production_compnay: theaterData.production_compnay,
-            summer: theaterData.summer,
-            musical: theaterData.musical,
-            community: theaterData.community,
-            outdoor: theaterData.outdoor,
-          });
-          setIsNewTheater(false);
+        const response = await fetch(`/api/companies/${companyId}/theater`);
+        if (response.ok) {
+          const theaterData = await response.json();
+          if (theaterData) {
+            setTheater(theaterData);
+            setFormData({
+              submission_preference: theaterData.submission_preference,
+              literary_submission_preference: theaterData.literary_submission_preference,
+              contract: theaterData.contract,
+              production_compnay: theaterData.production_compnay,
+              summer: theaterData.summer,
+              musical: theaterData.musical,
+              community: theaterData.community,
+              outdoor: theaterData.outdoor,
+            });
+            setIsNewTheater(false);
+          } else {
+            setIsNewTheater(true);
+          }
         } else {
           setIsNewTheater(true);
         }
@@ -87,9 +91,29 @@ export default function TheaterForm({ companyId, onSave }: TheaterFormProps) {
       };
       
       if (isNewTheater) {
-        await theatersAPI.create(theaterData);
+        const response = await fetch('/api/theaters', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(theaterData),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to create theater');
+        }
       } else if (theater) {
-        await theatersAPI.update(theater.theater_no, theaterData);
+        const response = await fetch(`/api/theaters/${theater.theater_no}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(theaterData),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to update theater');
+        }
       }
       
       onSave();
@@ -122,6 +146,7 @@ export default function TheaterForm({ companyId, onSave }: TheaterFormProps) {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          {/* Submission Preference */}
           <div>
             <label className="mb-2 block text-sm font-medium text-black dark:text-white">
               Submission Preference
@@ -135,6 +160,7 @@ export default function TheaterForm({ companyId, onSave }: TheaterFormProps) {
             />
           </div>
 
+          {/* Literary Submission Preference */}
           <div>
             <label className="mb-2 block text-sm font-medium text-black dark:text-white">
               Literary Submission Preference
@@ -149,22 +175,23 @@ export default function TheaterForm({ companyId, onSave }: TheaterFormProps) {
           </div>
         </div>
 
+        {/* Contract */}
         <div>
           <label className="mb-2 block text-sm font-medium text-black dark:text-white">
-            Contract Details
+            Contract Information
           </label>
           <textarea
             name="contract"
             value={formData.contract}
             onChange={handleInputChange}
             rows={4}
-            placeholder="Describe contract terms, requirements, etc."
             className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
           />
         </div>
 
+        {/* Theater Features */}
         <div>
-          <h4 className="mb-4 text-md font-medium text-black dark:text-white">Theater Type & Features</h4>
+          <h4 className="mb-4 text-md font-medium text-black dark:text-white">Theater Features</h4>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
             {[
               { name: 'production_compnay', label: 'Production Company' },
@@ -190,6 +217,7 @@ export default function TheaterForm({ companyId, onSave }: TheaterFormProps) {
           </div>
         </div>
 
+        {/* Submit Button */}
         <div className="flex justify-end">
           <button
             type="submit"

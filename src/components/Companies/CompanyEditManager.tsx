@@ -5,12 +5,12 @@ import { useRouter } from "next/navigation";
 import { Company } from "@/types/company";
 import { companiesAPI } from "@/lib/api";
 import CompanyForm from "./CompanyForm";
-import AgencyForm from "./AgencyForm";
-import CastingForm from "./CastingForm";
-import RentalSpaceForm from "./RentalSpaceForm";
-import TheaterForm from "./TheaterForm";
-import RentalStudioForm from "./RentalStudioForm";
-import SchoolForm from "./SchoolForm";
+import AgencyForm from "./Agency/AgencyForm";
+import CastingForm from "./Casting/CastingForm";
+import RentalSpaceForm from "./Rental-Spaces/RentalSpaceForm";
+import TheaterForm from "./Theater/TheaterForm";
+import RentalStudioForm from "./Rental-Studios/RentalStudioForm";
+import SchoolForm from "./School/SchoolForm";
 import CompanyAddressesManager from "./CompanyAddressesManager";
 import CommentsModal from "@/components/common/CommentsModal";
 import ConfirmationDialog from "@/components/common/ConfirmationDialog";
@@ -33,14 +33,14 @@ const COMPANY_TYPES = ['Agency', 'Casting', 'Rental Space', 'Theater', 'Rental S
 
 export default function CompanyEditManager({ companyId }: CompanyEditManagerProps) {
   const [company, setCompany] = useState<Company | null>(null);
-  const [companyType, setCompanyType] = useState<string | null>(null);
-  const [hasTypeData, setHasTypeData] = useState(false);
-  const [selectedType, setSelectedType] = useState<string>('');
+  const [companyTypes, setCompanyTypes] = useState<string[]>([]);
+  const [typeDataStatus, setTypeDataStatus] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'basic' | 'type-specific' | 'addresses'>('basic');
-  const [changingType, setChangingType] = useState(false);
+  const [activeTypeTab, setActiveTypeTab] = useState<string>('');
+  const [addingType, setAddingType] = useState(false);
   const [showCommentsModal, setShowCommentsModal] = useState(false);
   
   const { confirm, confirmationProps } = useConfirmation();
@@ -55,11 +55,19 @@ export default function CompanyEditManager({ companyId }: CompanyEditManagerProp
       const data = await companiesAPI.getById(companyId);
       setCompany(data);
       
-      // Load company type
-      const typeData = await companiesAPI.getType(companyId);
-      setCompanyType(typeData.companyType);
-      setHasTypeData(typeData.hasData);
-      setSelectedType(typeData.companyType || '');
+      // Load company types (multiple types supported)
+      const typesResponse = await fetch(`/api/companies/${companyId}/types`);
+      if (!typesResponse.ok) {
+        throw new Error('Failed to fetch company types');
+      }
+      const typesData = await typesResponse.json();
+      setCompanyTypes(typesData.companyTypes || []);
+      setTypeDataStatus(typesData.typeDataStatus || {});
+      
+      // Set the first type as active if we have types
+      if (typesData.companyTypes && typesData.companyTypes.length > 0) {
+        setActiveTypeTab(typesData.companyTypes[0]);
+      }
       
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load company');
@@ -89,14 +97,14 @@ export default function CompanyEditManager({ companyId }: CompanyEditManagerProp
     await loadCompany();
   };
 
-  const handleTypeChange = async (newType: string) => {
-    if (newType === companyType) return;
+  const handleAddType = async (newType: string) => {
+    if (companyTypes.includes(newType)) return;
 
     const confirmed = await confirm(
-      `Are you sure you want to change the company type to ${newType}?\nThis will ${companyType ? 'archive existing data and create new records' : 'create new type-specific records'}.`,
+      `Are you sure you want to add ${newType} type to this company?\nThis will create new ${newType}-specific records.`,
       {
-        title: 'Change Company Type',
-        confirmText: 'Change Type',
+        title: 'Add Company Type',
+        confirmText: 'Add Type',
         cancelText: 'Cancel',
         variant: 'warning'
       }
@@ -104,16 +112,77 @@ export default function CompanyEditManager({ companyId }: CompanyEditManagerProp
 
     if (confirmed) {
       try {
-        setChangingType(true);
+        setAddingType(true);
         setError(null);
         
-        await companiesAPI.changeType(companyId, newType, companyType || undefined);
+        const response = await fetch(`/api/companies/${companyId}/types`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ typeToAdd: newType }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to add company type');
+        }
+        
+        const result = await response.json();
+        console.log('Add type result:', result);
+        
         await loadCompany();
+        console.log('Company types after adding:', companyTypes);
         setActiveTab('type-specific');
+        setActiveTypeTab(newType);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to change company type');
+        setError(err instanceof Error ? err.message : 'Failed to add company type');
       } finally {
-        setChangingType(false);
+        setAddingType(false);
+      }
+    }
+  };
+
+  const handleRemoveType = async (typeToRemove: string) => {
+    const confirmed = await confirm(
+      `Are you sure you want to remove ${typeToRemove} type from this company?\nThis will archive all ${typeToRemove}-specific data.`,
+      {
+        title: 'Remove Company Type',
+        confirmText: 'Remove Type',
+        cancelText: 'Cancel',
+        variant: 'danger'
+      }
+    );
+
+    if (confirmed) {
+      try {
+        setAddingType(true);
+        setError(null);
+        
+        const response = await fetch(`/api/companies/${companyId}/types?type=${encodeURIComponent(typeToRemove)}`, {
+          method: 'DELETE',
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to remove company type');
+        }
+        
+        await loadCompany();
+        
+        // If we removed the active type tab, switch to the first available type or basic
+        if (activeTypeTab === typeToRemove) {
+          const remainingTypes = companyTypes.filter(t => t !== typeToRemove);
+          if (remainingTypes.length > 0) {
+            setActiveTypeTab(remainingTypes[0]);
+          } else {
+            setActiveTab('basic');
+          }
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to remove company type');
+      } finally {
+        setAddingType(false);
       }
     }
   };
@@ -178,7 +247,7 @@ export default function CompanyEditManager({ companyId }: CompanyEditManagerProp
     );
   }
 
-  const TypeSpecificForm = companyType ? COMPANY_TYPE_FORMS[companyType as keyof typeof COMPANY_TYPE_FORMS] : null;
+  const availableTypesToAdd = COMPANY_TYPES.filter(type => !companyTypes.includes(type));
 
   return (
     <div className="mx-auto max-w-7xl">
@@ -190,7 +259,7 @@ export default function CompanyEditManager({ companyId }: CompanyEditManagerProp
               Edit Company: {company.name}
             </h4>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Company Type: {companyType || 'Not specified'}
+              Company Types: {companyTypes.length > 0 ? companyTypes.join(', ') : 'None specified'}
             </p>
           </div>
           <div className="flex gap-3">
@@ -216,62 +285,60 @@ export default function CompanyEditManager({ companyId }: CompanyEditManagerProp
           </div>
         </div>
 
-        {/* Company Type Selector */}
-        {!companyType && (
-          <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg dark:bg-yellow-900/20 dark:border-yellow-800">
-            <h5 className="text-lg font-medium text-black dark:text-white mb-3">
-              Select Company Type
-            </h5>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              Choose the type of company to enable type-specific features and forms.
-            </p>
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-              {COMPANY_TYPES.map((type) => (
-                <button
-                  key={type}
-                  onClick={() => handleTypeChange(type)}
-                  disabled={changingType}
-                  className="flex items-center justify-center rounded border border-stroke px-4 py-2 font-medium text-black hover:bg-gray-50 dark:border-strokedark dark:text-white dark:hover:bg-gray-800 disabled:opacity-50"
-                >
-                  {changingType ? 'Setting...' : type}
-                </button>
-              ))}
+        {/* Company Type Management */}
+        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg dark:bg-blue-900/20 dark:border-blue-800">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h5 className="text-lg font-medium text-black dark:text-white mb-1">
+                Company Types ({companyTypes.length})
+              </h5>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Add or remove company types. Each type enables specific features and forms.
+              </p>
             </div>
           </div>
-        )}
-
-        {/* Company Type Change Option */}
-        {companyType && (
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg dark:bg-blue-900/20 dark:border-blue-800">
-            <div className="flex items-center justify-between">
-              <div>
-                <h5 className="text-lg font-medium text-black dark:text-white mb-1">
-                  Current Type: {companyType}
-                </h5>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Change the company type to access different features and forms.
-                </p>
-              </div>
-              <select
-                value={selectedType}
-                onChange={(e) => {
-                  setSelectedType(e.target.value);
-                  if (e.target.value && e.target.value !== companyType) {
-                    handleTypeChange(e.target.value);
-                  }
-                }}
-                disabled={changingType}
-                className="rounded border border-stroke px-4 py-2 text-black outline-none transition focus:border-primary dark:border-strokedark dark:bg-form-input dark:text-white"
-              >
-                {COMPANY_TYPES.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
+          
+          {/* Current Types */}
+          {companyTypes.length > 0 && (
+            <div className="mb-4">
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Current Types:</p>
+              <div className="flex flex-wrap gap-2">
+                {companyTypes.map((type) => (
+                  <div key={type} className="flex items-center gap-2 bg-primary bg-opacity-10 text-primary px-3 py-1 rounded-full">
+                    <span className="text-sm font-medium">{type}</span>
+                    <button
+                      onClick={() => handleRemoveType(type)}
+                      disabled={addingType}
+                      className="text-danger hover:text-danger-dark disabled:opacity-50"
+                      title={`Remove ${type} type`}
+                    >
+                      ×
+                    </button>
+                  </div>
                 ))}
-              </select>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+
+          {/* Add New Type */}
+          {availableTypesToAdd.length > 0 && (
+            <div>
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Add Type:</p>
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+                {availableTypesToAdd.map((type) => (
+                  <button
+                    key={type}
+                    onClick={() => handleAddType(type)}
+                    disabled={addingType}
+                    className="flex items-center justify-center rounded border border-stroke px-4 py-2 font-medium text-black hover:bg-gray-50 dark:border-strokedark dark:text-white dark:hover:bg-gray-800 disabled:opacity-50"
+                  >
+                    {addingType ? 'Adding...' : `+ ${type}`}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Tab Navigation */}
         <div className="border-b border-stroke dark:border-strokedark">
@@ -287,7 +354,7 @@ export default function CompanyEditManager({ companyId }: CompanyEditManagerProp
               Basic Information
             </button>
             
-            {companyType && TypeSpecificForm && (
+            {companyTypes.length > 0 && (
               <button
                 onClick={() => setActiveTab('type-specific')}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
@@ -296,7 +363,7 @@ export default function CompanyEditManager({ companyId }: CompanyEditManagerProp
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
                 }`}
               >
-                {companyType} Details
+                Type-Specific Details
               </button>
             )}
             
@@ -326,12 +393,41 @@ export default function CompanyEditManager({ companyId }: CompanyEditManagerProp
         </div>
       )}
 
-      {activeTab === 'type-specific' && companyType && TypeSpecificForm && (
-        <div className="rounded-sm border border-stroke bg-white px-5 pb-2.5 pt-6 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
-          <TypeSpecificForm
-            companyId={companyId}
-            onSave={handleSaveTypeSpecific}
-          />
+      {activeTab === 'type-specific' && companyTypes.length > 0 && (
+        <div className="space-y-6">
+          {/* Type-specific tabs */}
+          <div className="rounded-sm border border-stroke bg-white px-5 pb-2.5 pt-6 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
+            <div className="border-b border-stroke dark:border-strokedark mb-6">
+              <nav className="-mb-px flex space-x-8">
+                {companyTypes.map((type) => (
+                  <button
+                    key={type}
+                    onClick={() => setActiveTypeTab(type)}
+                    className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                      activeTypeTab === type
+                        ? 'border-primary text-primary'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                    }`}
+                  >
+                    {type} Details
+                  </button>
+                ))}
+              </nav>
+            </div>
+
+            {/* Render the form for the active type */}
+            {activeTypeTab && COMPANY_TYPE_FORMS[activeTypeTab as keyof typeof COMPANY_TYPE_FORMS] && (
+              (() => {
+                const TypeSpecificForm = COMPANY_TYPE_FORMS[activeTypeTab as keyof typeof COMPANY_TYPE_FORMS];
+                return (
+                  <TypeSpecificForm
+                    companyId={companyId}
+                    onSave={handleSaveTypeSpecific}
+                  />
+                );
+              })()
+            )}
+          </div>
         </div>
       )}
 

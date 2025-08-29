@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { Agency, Address } from "@/types/company";
-import { agenciesAPI, addressesAPI } from "@/lib/api";
 
 interface AgencyFormProps {
   companyId: number;
@@ -44,35 +43,43 @@ export default function AgencyForm({ companyId, onSave }: AgencyFormProps) {
       setError(null);
       
       // Load addresses for dropdown
-      const addressData = await addressesAPI.getAll();
-      setAddresses(addressData);
+      const addressResponse = await fetch('/api/addresses');
+      if (addressResponse.ok) {
+        const addressData = await addressResponse.json();
+        setAddresses(addressData);
+      }
       
       // Try to load existing agency data
       try {
-        const agencyData = await agenciesAPI.getByCompany(companyId);
-        if (agencyData) {
-          setAgency(agencyData);
-          setFormData({
-            address_no: agencyData.address_no,
-            contact1: agencyData.contact1,
-            contact2: agencyData.contact2,
-            unions: agencyData.unions,
-            submission_preference: agencyData.submission_preference,
-            represents: agencyData.represents,
-            does_not_represent: agencyData.does_not_represent,
-            market: agencyData.market,
-            seeks: agencyData.seeks,
-            literary_only: agencyData.literary_only,
-            bi_coastal: agencyData.bi_coastal,
-            freelance: agencyData.freelance,
-            talent: agencyData.talent,
-            seeking: agencyData.seeking,
-            represents_min_agee: agencyData.represents_min_agee,
-            represents_max_age: agencyData.represents_max_age,
-            seeking_min_age: agencyData.seeking_min_age,
-            seeking_max_age: agencyData.seeking_max_age,
-          });
-          setIsNewAgency(false);
+        const response = await fetch(`/api/companies/${companyId}/agency`);
+        if (response.ok) {
+          const agencyData = await response.json();
+          if (agencyData) {
+            setAgency(agencyData);
+            setFormData({
+              address_no: agencyData.address_no,
+              contact1: agencyData.contact1,
+              contact2: agencyData.contact2,
+              unions: agencyData.unions,
+              submission_preference: agencyData.submission_preference,
+              represents: agencyData.represents,
+              does_not_represent: agencyData.does_not_represent,
+              market: agencyData.market,
+              seeks: agencyData.seeks,
+              literary_only: agencyData.literary_only,
+              bi_coastal: agencyData.bi_coastal,
+              freelance: agencyData.freelance,
+              talent: agencyData.talent,
+              seeking: agencyData.seeking,
+              represents_min_agee: agencyData.represents_min_agee,
+              represents_max_age: agencyData.represents_max_age,
+              seeking_min_age: agencyData.seeking_min_age,
+              seeking_max_age: agencyData.seeking_max_age,
+            });
+            setIsNewAgency(false);
+          } else {
+            setIsNewAgency(true);
+          }
         } else {
           setIsNewAgency(true);
         }
@@ -114,9 +121,29 @@ export default function AgencyForm({ companyId, onSave }: AgencyFormProps) {
       };
       
       if (isNewAgency) {
-        await agenciesAPI.create(agencyData);
+        const response = await fetch('/api/agencies', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(agencyData),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to create agency');
+        }
       } else if (agency) {
-        await agenciesAPI.update(agency.agency_no, agencyData);
+        const response = await fetch(`/api/agencies/${agency.agency_no}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(agencyData),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to update agency');
+        }
       }
       
       onSave();
@@ -160,10 +187,10 @@ export default function AgencyForm({ companyId, onSave }: AgencyFormProps) {
               onChange={handleInputChange}
               className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
             >
-              <option value={0}>Select an address</option>
+              <option value={0}>No address</option>
               {addresses.map((address) => (
                 <option key={address.address_no} value={address.address_no}>
-                  {address.line1}, {address.city}, {address.state}
+                  {`${address.line1}${address.line2 ? ', ' + address.line2 : ''}, ${address.city}, ${address.state} ${address.zip}`}
                 </option>
               ))}
             </select>
@@ -250,7 +277,7 @@ export default function AgencyForm({ companyId, onSave }: AgencyFormProps) {
               </label>
               <input
                 type="number"
-                name="represents_min_age"
+                name="represents_min_agee"
                 value={formData.represents_min_agee}
                 onChange={handleInputChange}
                 min="0"
