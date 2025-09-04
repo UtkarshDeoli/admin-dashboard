@@ -1,5 +1,5 @@
 import { Company, Address, Person, Project, Comment, CompanyAddress, PrivacySetting, Agency, Casting, RentalSpace, Theater, RentalStudio, School } from '@/types/company';
-
+import {Play, PlayProduction, PlayContributor} from '@/types/play';
 const API_BASE_URL = process.env.NODE_ENV === 'production' ? '' : 'http://localhost:3000';
 
 // Companies API
@@ -654,5 +654,131 @@ export const commentsAPI = {
       method: 'DELETE',
     });
     if (!response.ok) throw new Error('Failed to delete comment');
+  },
+};
+
+// Plays API
+export const playsAPI = {
+  getAll: async (): Promise<Play[]> => {
+    const response = await fetch(`${API_BASE_URL}/api/plays`);
+    if (!response.ok) throw new Error('Failed to fetch plays');
+    return response.json();
+  },
+
+  getById: async (id: number): Promise<Play> => {
+    const response = await fetch(`${API_BASE_URL}/api/plays/${id}`);
+    if (!response.ok) throw new Error('Failed to fetch play');
+    return response.json();
+  },
+
+  create: async (play: Omit<Play, 'play_no'>): Promise<Play> => {
+    const response = await fetch(`${API_BASE_URL}/api/plays`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(play),
+    });
+    if (!response.ok) throw new Error('Failed to create play');
+    return response.json();
+  },
+
+  update: async (id: number, play: Omit<Play, 'play_no'>): Promise<Play> => {
+    const response = await fetch(`${API_BASE_URL}/api/plays/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(play),
+    });
+    if (!response.ok) throw new Error('Failed to update play');
+    return response.json();
+  },
+
+  delete: async (id: number): Promise<void> => {
+    const response = await fetch(`${API_BASE_URL}/api/plays/${id}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) throw new Error('Failed to delete play');
+  },
+};
+
+// Play Productions API
+export const playProductionsAPI = {
+  getAll: async (): Promise<PlayProduction[]> => {
+    const response = await fetch(`${API_BASE_URL}/api/play-productions`);
+    if (!response.ok) throw new Error('Failed to fetch play productions');
+    return response.json();
+  },
+
+  getById: async (id: number): Promise<PlayProduction> => {
+    const response = await fetch(`${API_BASE_URL}/api/play-productions/${id}`);
+    if (!response.ok) throw new Error('Failed to fetch play production');
+    return response.json();
+  },
+
+  create: async (production: Omit<PlayProduction, 'production_no'>): Promise<PlayProduction> => {
+    const response = await fetch(`${API_BASE_URL}/api/play-productions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(production),
+    });
+    if (!response.ok) throw new Error('Failed to create play production');
+    return response.json();
+  },
+
+  update: async (id: number, production: Omit<PlayProduction, 'production_no'>): Promise<PlayProduction> => {
+    const response = await fetch(`${API_BASE_URL}/api/play-productions/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(production),
+    });
+    if (!response.ok) throw new Error('Failed to update play production');
+    return response.json();
+  },
+
+  delete: async (id: number): Promise<void> => {
+    const response = await fetch(`${API_BASE_URL}/api/play-productions/${id}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) throw new Error('Failed to delete play production');
+  },
+};
+
+// Play Contributors API
+export const playContributorsAPI = {
+  getAll: async (): Promise<PlayContributor[]> => {
+    const response = await fetch(`${API_BASE_URL}/api/play-contributors`);
+    if (!response.ok) throw new Error('Failed to fetch play contributors');
+    return response.json();
+  },
+
+  getById: async (id: number): Promise<PlayContributor> => {
+    const response = await fetch(`${API_BASE_URL}/api/play-contributors/${id}`);
+    if (!response.ok) throw new Error('Failed to fetch play contributor');
+    return response.json();
+  },
+
+  create: async (contributor: Omit<PlayContributor, 'pc_no'>): Promise<PlayContributor> => {
+    const response = await fetch(`${API_BASE_URL}/api/play-contributors`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(contributor),
+    });
+    if (!response.ok) throw new Error('Failed to create play contributor');
+    return response.json();
+  },
+
+  update: async (id: number, contributor: Omit<PlayContributor, 'pc_no'>): Promise<PlayContributor> => {
+    const response = await fetch(`${API_BASE_URL}/api/play-contributors/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(contributor),
+    });
+    if (!response.ok) throw new Error('Failed to update play contributor');
+    return response.json();
+  },
+
+  delete: async (id: number): Promise<void> => {
+    const response = await fetch(`${API_BASE_URL}/api/play-contributors/${id}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) throw new Error('Failed to delete play contributor');
   },
 };

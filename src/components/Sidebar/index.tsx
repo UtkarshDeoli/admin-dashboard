@@ -158,6 +158,35 @@ const menuGroups = [
         label: "Projects",
         route: "/projects",
       },
+      {
+        icon:(
+          <svg
+            className="fill-current"
+            width="18"
+            height="18"
+            viewBox="0 0 18 18"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M15.75 2.8125H14.4375V2.25C14.4375 1.93579 14.1642 1.6875 13.8125 1.6875C13.4608 1.6875 13.1875 1.96079 13.1875 2.25V2.8125H4.8125V2.25C4.8125 1.93579 4.53921 1.6875 4.1875 1.6875C3.83579 1.6875 3.5625 1.96079 3.5625 2.25V2.8125H2.25C1.42157 2.8125 0.75 3.48407 0.75 4.3125V15.1875C0.75 16.0159 1.42157 16.6875 2.25 16.6875H15.75C16.5784 16.6875 17.25 16.0159 17.25 15.1875V4.3125C17.25 3.48407 16.5784 2.8125 15.75 2.8125ZM15.75 15.1875H2.25V7.3125H15.75V15.1875ZM15.75 5.8125H2.25V4.3125H15.75V5.8125Z"
+              fill=""
+            />
+          </svg>
+        ),
+        label:"Plays",
+        route:"/plays",
+        children:[
+          {
+            label:"Contributors",
+            route:"/plays/contributors",
+          },
+         {
+          label:"Productions",
+          route:"/plays/productions",
+         } 
+        ]
+      }
     ],
   },
   {
