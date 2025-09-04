@@ -44,10 +44,10 @@ export default function PlayList({ plays, onEdit, onDelete, onView, onAdd, delet
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h4 className="text-xl font-semibold text-black dark:text-white">Plays Management</h4>
         <div className="flex items-center gap-3">
-          <button onClick={onToggleSearch} className={`rounded px-4 py-2 text-sm font-medium text-white ${showSearchForm ? 'bg-secondary' : 'bg-meta-3'} hover:bg-opacity-90`}>
+          <button onClick={onToggleSearch} className={`flex items-center justify-center rounded px-6 py-2 font-medium text-white transition ${showSearchForm ? 'bg-secondary hover:bg-opacity-90' : 'bg-meta-3 hover:bg-opacity-90'}`}>
             {showSearchForm ? 'Hide Search' : 'Show Search'}
           </button>
-          <button onClick={onAdd} className="inline-flex items-center justify-center rounded bg-primary px-4 py-2 text-center font-medium text-white hover:bg-opacity-90">
+          <button onClick={onAdd} className="inline-flex items-center justify-center rounded-md bg-primary py-2 px-10 text-center font-medium text-white hover:bg-opacity-90 lg:px-8 xl:px-10">
             Add Play
           </button>
         </div>
