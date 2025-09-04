@@ -55,7 +55,7 @@ export default function ContributorList({ contributors, onEdit, onDelete, onView
           <button onClick={onToggleSearch} className={`flex items-center justify-center rounded px-6 py-2 font-medium text-white transition ${showSearchForm ? 'bg-secondary hover:bg-opacity-90' : 'bg-meta-3 hover:bg-opacity-90'}`}>
             {showSearchForm ? 'Hide Search' : 'Show Search'}
           </button>
-          <button onClick={onAdd} className="inline-flex items-center justify-center rounded-md bg-primary px-10 py-2 text-center font-medium text-white hover:bg-opacity-90 lg:px-8 xl:px-10">
+          <button onClick={onAdd} className="flex items-center justify-center rounded bg-primary px-6 py-2 font-medium text-gray hover:bg-opacity-90">
             Add Contributor
           </button>
         </div>
