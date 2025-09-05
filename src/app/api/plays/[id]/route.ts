@@ -9,16 +9,24 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       return NextResponse.json({ error: 'Invalid play ID' }, { status: 400 });
     }
 
-    const result = await query(
+    const playResult = await query(
       'SELECT * FROM plays WHERE play_no = $1',
       [id]
     );
 
-    if (result.rows.length === 0) {
+    if (playResult.rows.length === 0) {
       return NextResponse.json({ error: 'Play not found' }, { status: 404 });
     }
 
-    return NextResponse.json(result.rows[0]);
+    const contributorsResult = await query(
+      'SELECT * FROM play_contributors WHERE play_no = $1 ORDER BY pc_no ASC',
+      [id]
+    );
+
+    const play = playResult.rows[0];
+    play.contributors = contributorsResult.rows;
+
+    return NextResponse.json(play);
   } catch (error) {
     console.error('Error fetching play:', error);
     return NextResponse.json({ error: 'Failed to fetch play' }, { status: 500 });

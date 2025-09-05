@@ -20,6 +20,19 @@ export default function PlayList({ plays, onEdit, onDelete, onView, onAdd, delet
   const [typeFilter, setTypeFilter] = useState<string>("");
   const [playNoFilter, setPlayNoFilter] = useState<string>("");
 
+  const getPlayTypeBadgeColor = (type: string) => {
+    switch (type) {
+      case 'Play': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+      case 'Musical': return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
+      case 'Opera': return 'bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200';
+      case 'Short': return 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200';
+      case '1-Act': return 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200';
+      case 'Operetta': return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200';
+      case 'Youth': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
+    }
+  };
+
   const filtered = useMemo(() => {
     return plays.filter((p) => {
       if (titleFilter && !(p.title || "").toLowerCase().includes(titleFilter.toLowerCase())) return false;
@@ -47,7 +60,7 @@ export default function PlayList({ plays, onEdit, onDelete, onView, onAdd, delet
           <button onClick={onToggleSearch} className={`flex items-center justify-center rounded px-6 py-2 font-medium text-white transition ${showSearchForm ? 'bg-secondary hover:bg-opacity-90' : 'bg-meta-3 hover:bg-opacity-90'}`}>
             {showSearchForm ? 'Hide Search' : 'Show Search'}
           </button>
-          <button onClick={onAdd} className="flex items-center justify-center rounded bg-primary px-6 py-2 font-medium text-gray hover:bg-opacity-90">
+          <button onClick={onAdd} className="flex items-center justify-center rounded bg-primary px-6 py-2 font-medium text-white hover:bg-opacity-90">
             Add Play
           </button>
         </div>
@@ -66,6 +79,12 @@ export default function PlayList({ plays, onEdit, onDelete, onView, onAdd, delet
         </div>
       )}
 
+      <div className="mb-6">
+          <h4 className="text-xl font-semibold text-black dark:text-white">
+            Plays ({filtered.length})
+          </h4>
+        </div>
+
       <div className="w-full overflow-x-auto">
         <table className="w-full table-auto">
           <thead>
@@ -73,13 +92,15 @@ export default function PlayList({ plays, onEdit, onDelete, onView, onAdd, delet
               <th className="px-4 py-4 font-medium text-black dark:text-white">Play No</th>
               <th className="min-w-[200px] px-4 py-4 font-medium text-black dark:text-white">Title</th>
               <th className="px-4 py-4 font-medium text-black dark:text-white">Play Type</th>
+              <th className="px-4 py-4 font-medium text-black dark:text-white">Person</th>
+              <th className="px-4 py-4 font-medium text-black dark:text-white">Contributor Type</th>
               <th className="px-4 py-4 font-medium text-black dark:text-white">Actions</th>
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-gray-400">No plays found</td>
+                <td colSpan={6} className="px-4 py-8 text-center text-black dark:text-white">No plays found</td>
               </tr>
             ) : null}
             {filtered.map((play) => {
@@ -87,8 +108,8 @@ export default function PlayList({ plays, onEdit, onDelete, onView, onAdd, delet
               
               return (
                 <tr key={play.play_no} className="border-b border-stroke dark:border-strokedark">
-                  <td className="px-4 py-4">{play.play_no}</td>
-                  <td className="px-4 py-4">{play.title}</td>
+                  <td className="px-4 py-4 text-black dark:text-white">{play.play_no}</td>
+                  <td className="px-4 py-4 text-black dark:text-white">{play.title}</td>
                   <td className="px-4 py-4">
                     {(() => {
                       const types = Array.isArray(play.play_type)
@@ -103,16 +124,42 @@ export default function PlayList({ plays, onEdit, onDelete, onView, onAdd, delet
                           {types.map((type: string, index: number) => (
                             <span
                               key={index}
-                              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20"
+                              className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getPlayTypeBadgeColor(type)}`}
                             >
                               {type}
                             </span>
                           ))}
                         </div>
                       ) : (
-                        <span className="text-gray-500">N/A</span>
+                        <span className="text-black dark:text-white">N/A</span>
                       );
                     })()}
+                  </td>
+                  <td className="px-4 py-4">
+                    {play.contributors && play.contributors.length > 0 ? (
+                      <div className="space-y-1">
+                        {play.contributors.map((contributor, index) => (
+                          <div key={index} className="text-black dark:text-white">
+                            {contributor.people_no}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-sm text-black dark:text-white">N/A</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-4">
+                    {play.contributors && play.contributors.length > 0 ? (
+                      <div className="space-y-1">
+                        {play.contributors.map((contributor, index) => (
+                          <div key={index} className="text-black dark:text-white">
+                            {contributor.play_contributor_type}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-gray-500">N/A</span>
+                    )}
                   </td>
                   <td className="px-4 py-4">
                     <div className="flex items-center space-x-3.5">

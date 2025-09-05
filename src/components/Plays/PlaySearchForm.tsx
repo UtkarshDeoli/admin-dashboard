@@ -41,6 +41,10 @@ export default function PlaySearchForm({ onSearch, defaultFilters, searching = f
       <h5 className="mb-4 text-lg font-semibold text-black dark:text-white">Search Plays</h5>
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        <div>
+            <label className="mb-3 block text-sm font-medium text-black dark:text-white">Play No</label>
+            <input value={filters.playNo} onChange={(e)=>handleChange('playNo', e.target.value)} className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" placeholder="Search by play no" />
+          </div>
           <div>
             <label className="mb-3 block text-sm font-medium text-black dark:text-white">Title</label>
             <input value={filters.title} onChange={(e)=>handleChange('title', e.target.value)} className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" placeholder="Search by play title" />
@@ -48,10 +52,6 @@ export default function PlaySearchForm({ onSearch, defaultFilters, searching = f
           <div>
             <label className="mb-3 block text-sm font-medium text-black dark:text-white">Play Type</label>
             <input value={filters.playType} onChange={(e)=>handleChange('playType', e.target.value)} className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" placeholder="Search by play type" />
-          </div>
-          <div>
-            <label className="mb-3 block text-sm font-medium text-black dark:text-white">Play No</label>
-            <input value={filters.playNo} onChange={(e)=>handleChange('playNo', e.target.value)} className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" placeholder="Search by play no" />
           </div>
         </div>
         <div className="mt-4 flex items-center gap-3">

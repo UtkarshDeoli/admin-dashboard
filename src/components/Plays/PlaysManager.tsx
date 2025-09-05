@@ -30,7 +30,20 @@ export default function PlaysManager() {
     setError(null);
     try {
       const data = await playsAPI.getAll();
-      setPlays(data);
+      
+      const playsWithContributors = await Promise.all(
+        data.map(async (play) => {
+          try {
+            const playWithContributors = await playsAPI.getById(play.play_no);
+            return playWithContributors;
+          } catch (error) {
+            console.error(`Failed to load contributors for play ${play.play_no}:`, error);
+            return play; 
+          }
+        })
+      );
+      
+      setPlays(playsWithContributors);
     } catch (e: any) {
       setError(e?.message || 'Failed to load plays');
     } finally {
@@ -50,6 +63,19 @@ export default function PlaysManager() {
   const handleAdd = () => {
     setSelectedPlay(null);
     setIsAddOpen(true);
+  };
+
+  const getPlayTypeBadgeColor = (type: string) => {
+    switch (type) {
+      case 'Play': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+      case 'Musical': return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
+      case 'Opera': return 'bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200';
+      case 'Short': return 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200';
+      case '1-Act': return 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200';
+      case 'Operetta': return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200';
+      case 'Youth': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
+    }
   };
 
   const handleFormSubmit = async (formData: Omit<Play, 'play_no'>) => {
@@ -123,45 +149,79 @@ export default function PlaysManager() {
         onToggleSearch={() => setShowSearchForm(!showSearchForm)}
       />
 
-      <Modal isOpen={isViewOpen} onClose={() => setIsViewOpen(false)} title="View Play" size="lg">
+      <Modal isOpen={isViewOpen} onClose={() => setIsViewOpen(false)} title="Play Details" size="lg">
         <div className="p-6.5 space-y-4">
           {selectedPlay ? (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div>
-                <p className="text-xs text-gray-500">Title</p>
-                <p className="font-medium">{selectedPlay.title}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500">Play Type</p>
-                <div className="flex flex-wrap gap-1">
-                  {(() => {
-                    const types = Array.isArray(selectedPlay.play_type)
-                      ? selectedPlay.play_type
-                      : String(selectedPlay.play_type || '')
-                          .replace(/[{}]/g, '')
-                          .split(',')
-                          .map(t => t.trim())
-                          .filter(Boolean);
-                    return types.length ? (
-                      types.map((type: string, index: number) => (
-                        <span
-                          key={index}
-                          className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20"
-                        >
-                          {type}
-                        </span>
-                      ))
-                    ) : (
-                      <span className="text-gray-500">N/A</span>
-                    );
-                  })()}
+            <>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <p className="mb-2 block text-sm font-medium text-black dark:text-white">Title</p>
+                  <p className="text-black dark:text-white font-semibold">{selectedPlay.title}</p>
+                </div>
+                <div>
+                  <p className="mb-2 block text-sm font-medium text-black dark:text-white">Play Type</p>
+                  <div className="mt-4 flex flex-wrap gap-1">
+                    {(() => {
+                      const types = Array.isArray(selectedPlay.play_type)
+                        ? selectedPlay.play_type
+                        : String(selectedPlay.play_type || '')
+                            .replace(/[{}]/g, '')
+                            .split(',')
+                            .map(t => t.trim())
+                            .filter(Boolean);
+                      return types.length ? (
+                        types.map((type: string, index: number) => (
+                          <span
+                            key={index}
+                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getPlayTypeBadgeColor(type)}`}
+                          >
+                            {type}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-gray-500">N/A</span>
+                      );
+                    })()}
+                  </div>
+                </div>
+                <div>
+                  <p className="mb-2 block text-sm font-medium text-black dark:text-white">Play Number</p>
+                  <p className="text-black dark:text-white font-medium">{selectedPlay.play_no}</p>
                 </div>
               </div>
-              <div>
-                <p className="text-xs text-gray-500">Play Number</p>
-                <p className="font-medium">{selectedPlay.play_no}</p>
+
+              <div className="mt-6 flex gap-4">
+                <button
+                  type="button"
+                  className="flex justify-center rounded bg-primary px-6 py-2 font-medium text-gray hover:bg-opacity-90"
+                  onClick={() => {
+                    setIsViewOpen(false);
+                    setIsEditOpen(true);
+                  }}
+                >
+                  Edit Play
+                </button>
+                <button
+                  type="button"
+                  className="flex justify-center rounded bg-danger px-6 py-2 font-medium text-white hover:bg-opacity-90"
+                  onClick={async () => {
+                    if (selectedPlay) {
+                      setIsViewOpen(false);
+                      await handleDelete(selectedPlay.play_no);
+                    }
+                  }}
+                >
+                  Delete Play
+                </button>
+                <button
+                  type="button"
+                  className="flex justify-center rounded border border-stroke px-6 py-2 font-medium text-black hover:shadow-1 dark:border-strokedark dark:text-white hover:dark:border-white hover:border-black"
+                  onClick={() => setIsViewOpen(false)}
+                >
+                  Close
+                </button>
               </div>
-            </div>
+            </>
           ) : null}
         </div>
       </Modal>
@@ -174,7 +234,7 @@ export default function PlaysManager() {
 
       <Modal isOpen={isEditOpen} onClose={() => setIsEditOpen(false)} title="Edit Play" size="lg">
         <div className="p-6.5">
-          <PlayForm onSubmit={handleFormSubmit} initialData={selectedPlay} />
+          <PlayForm onSubmit={handleFormSubmit} initialData={selectedPlay} onCancel={() => setIsEditOpen(false)} />
         </div>
       </Modal>
 

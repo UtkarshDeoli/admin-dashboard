@@ -11,17 +11,19 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 
     const result = await query(
       `SELECT 
-         production_no,
-         play_no,
-         company_no,
-         to_char(start_date, 'YYYY-MM-DD') AS start_date,
-         to_char(end_date,   'YYYY-MM-DD') AS end_date,
-         season,
-         festival,
-         canceled,
-         archived
-       FROM play_productions 
-       WHERE production_no = $1`,
+         p.production_no,
+         p.play_no,
+         p.company_no,
+         c.name AS company_name,
+         to_char(p.start_date, 'YYYY-MM-DD') AS start_date,
+         to_char(p.end_date,   'YYYY-MM-DD') AS end_date,
+         p.season,
+         p.festival,
+         p.canceled,
+         p.archived
+       FROM system.play_productions p
+       LEFT JOIN system.companies c ON c.company_no = p.company_no
+       WHERE p.production_no = $1`,
       [id]
     );
 
@@ -62,7 +64,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     }
 
     const result = await query(
-      `UPDATE play_productions 
+      `UPDATE system.play_productions 
        SET play_no = $1, company_no = $2, start_date = $3, end_date = $4, 
            season = $5, festival = $6, canceled = $7, archived = $8
        WHERE production_no = $9 
@@ -90,7 +92,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     }
 
     const result = await query(
-      'UPDATE play_productions SET archived = true WHERE production_no = $1 RETURNING *',
+      'UPDATE system.play_productions SET archived = true WHERE production_no = $1 RETURNING *',
       [id]
     );
 

@@ -2,6 +2,7 @@ export interface Play{
     play_no:number;
     title:string;
     play_type:string[];
+    contributors?: PlayContributor[];
 }
 export interface PlayProduction {
     production_no: number;

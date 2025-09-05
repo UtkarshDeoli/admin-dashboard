@@ -7,6 +7,7 @@ interface ProductionRow {
   production_no: number;
   play_no: number | null;
   company_no: number | null;
+  company_name?: string | null;
   start_date: string | null;
   end_date: string | null;
   season: string | null;
@@ -21,17 +22,19 @@ interface ProductionListProps {
   onDelete: (productionNo: number) => void;
   onView: (production: ProductionRow) => void;
   onAdd: () => void;
+  onToggleArchive: (productionNo: number) => void;
   deleting: number[];
   showSearchForm: boolean;
   onToggleSearch: () => void;
 }
 
-export default function ProductionList({ productions, onEdit, onDelete, onView, onAdd, deleting, showSearchForm, onToggleSearch }: ProductionListProps) {
+export default function ProductionList({ productions, onEdit, onDelete, onView, onAdd, onToggleArchive, deleting, showSearchForm, onToggleSearch }: ProductionListProps) {
   const [playNoFilter, setPlayNoFilter] = useState<string>("");
   const [companyNoFilter, setCompanyNoFilter] = useState<string>("");
   const [seasonFilter, setSeasonFilter] = useState<string>("");
   const [festivalFilter, setFestivalFilter] = useState<string>("");
   const [canceledFilter, setCanceledFilter] = useState<string>("all");
+  const [showArchived, setShowArchived] = useState(false);
   const [appliedPlayNo, setAppliedPlayNo] = useState<string>("");
   const [appliedCompanyNo, setAppliedCompanyNo] = useState<string>("");
   const [appliedSeason, setAppliedSeason] = useState<string>("");
@@ -45,6 +48,9 @@ export default function ProductionList({ productions, onEdit, onDelete, onView, 
 
   const filtered = useMemo(() => {
     return productions.filter(p => {
+      const matchesArchiveFilter = showArchived || !p.archived;
+      if (!matchesArchiveFilter) return false;
+      
       if (appliedPlayNo && String(p.play_no ?? '').indexOf(appliedPlayNo) === -1) return false;
       if (appliedCompanyNo && String(p.company_no ?? '').indexOf(appliedCompanyNo) === -1) return false;
       if (appliedSeason && !(p.season || '').toLowerCase().includes(appliedSeason.toLowerCase())) return false;
@@ -57,7 +63,7 @@ export default function ProductionList({ productions, onEdit, onDelete, onView, 
       }
       return true;
     });
-  }, [productions, appliedPlayNo, appliedCompanyNo, appliedSeason, appliedFestival, appliedCanceled]);
+  }, [productions, showArchived, appliedPlayNo, appliedCompanyNo, appliedSeason, appliedFestival, appliedCanceled]);
 
   const handleSearch = () => {
     setAppliedPlayNo(playNoFilter);
@@ -83,12 +89,14 @@ export default function ProductionList({ productions, onEdit, onDelete, onView, 
   return (
     <div className="rounded-sm border border-stroke bg-white px-5 pb-2.5 pt-6 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h4 className="text-xl font-semibold text-black dark:text-white">Productions Management</h4>
+        <div>
+          <h4 className="text-xl font-semibold text-black dark:text-white mb-1">Productions Management</h4>
+        </div>
         <div className="flex items-center gap-3">
           <button onClick={onToggleSearch} className={`flex items-center justify-center rounded px-6 py-2 font-medium text-white transition ${showSearchForm ? 'bg-secondary hover:bg-opacity-90' : 'bg-meta-3 hover:bg-opacity-90'}`}>
             {showSearchForm ? 'Hide Search' : 'Show Search'}
           </button>
-          <button onClick={onAdd} className="flex items-center justify-center rounded bg-primary px-6 py-2 font-medium text-gray hover:bg-opacity-90">
+          <button onClick={onAdd} className="flex items-center justify-center rounded bg-primary px-6 py-2 font-medium text-white hover:bg-opacity-90">
             Add Production
           </button>
         </div>
@@ -119,14 +127,29 @@ export default function ProductionList({ productions, onEdit, onDelete, onView, 
           />
         </div>
       )}
-
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h4 className="text-xl font-semibold text-black dark:text-white">
+          Productions ({filtered.length})
+        </h4>
+        <div className="flex gap-4">
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              checked={showArchived}
+              onChange={(e) => setShowArchived(e.target.checked)}
+              className="mr-2"
+            />
+            <span className="text-sm text-black dark:text-white">Show Archived</span>
+          </label>
+        </div>
+      </div>
       <div className="w-full overflow-x-auto">
         <table className="w-full table-auto">
           <thead>
             <tr className="bg-gray-2 text-left dark:bg-meta-4">
               <th className="px-4 py-4 font-medium text-black dark:text-white">Production No</th>
               <th className="min-w-[120px] px-4 py-4 font-medium text-black dark:text-white">Play No</th>
-              <th className="min-w-[120px] px-4 py-4 font-medium text-black dark:text-white">Company No</th>
+              <th className="min-w-[160px] px-4 py-4 font-medium text-black dark:text-white">Company</th>
               <th className="px-4 py-4 font-medium text-black dark:text-white">Start</th>
               <th className="px-4 py-4 font-medium text-black dark:text-white">End</th>
               <th className="px-4 py-4 font-medium text-black dark:text-white">Season</th>
@@ -146,10 +169,10 @@ export default function ProductionList({ productions, onEdit, onDelete, onView, 
               const isDeleting = deleting.includes(production.production_no);
               
               return (
-                <tr key={production.production_no} className="border-b border-stroke dark:border-strokedark">
+                <tr key={production.production_no} className={`border-b border-stroke dark:border-strokedark ${production.archived ? "opacity-60" : ""}`}>
                   <td className="px-4 py-4">{production.production_no}</td>
                   <td className="px-4 py-4">{production.play_no ?? '-'}</td>
-                  <td className="px-4 py-4">{production.company_no ?? '-'}</td>
+                  <td className="px-4 py-4">{production.company_name || '-'}</td>
                   <td className="px-4 py-4">{formatDate(production.start_date)}</td>
                   <td className="px-4 py-4">{formatDate(production.end_date)}</td>
                   <td className="px-4 py-4">{production.season ?? '-'}</td>
@@ -160,8 +183,12 @@ export default function ProductionList({ productions, onEdit, onDelete, onView, 
                     </span>
                   </td>
                   <td className="px-4 py-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium border ${production.archived ? 'bg-gray-500/10 text-gray-400 border-gray-500/20' : 'bg-meta-3/10 text-meta-3 border-meta-3/20'}`}>
-                      {production.archived ? 'Archived' : 'Live'}
+                    <span className={`inline-flex rounded-full px-3 py-1 text-sm font-medium ${
+                      production.archived
+                        ? "bg-danger bg-opacity-10 text-danger"
+                        : "bg-success bg-opacity-10 text-success"
+                    }`}>
+                      {production.archived ? "Archived" : "Active"}
                     </span>
                   </td>
                   <td className="px-4 py-4">
@@ -218,6 +245,21 @@ export default function ProductionList({ productions, onEdit, onDelete, onView, 
                             strokeWidth="1.5"
                             strokeLinecap="round"
                           />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => onToggleArchive(production.production_no)}
+                        className="hover:text-warning"
+                        title={production.archived ? "Unarchive" : "Archive"}
+                        disabled={isDeleting}
+                      >
+                        <svg
+                          className="fill-current"
+                          width="18"
+                          height="18"
+                          viewBox="0 0 18 18"
+                        >
+                          <path d="M15.75 3.375H2.25C1.83579 3.375 1.5 3.71079 1.5 4.125V5.25C1.5 5.66421 1.83579 6 2.25 6H2.625V13.5C2.625 14.7426 3.63236 15.75 4.875 15.75H13.125C14.3676 15.75 15.375 14.7426 15.375 13.5V6H15.75C16.1642 6 16.5 5.66421 16.5 5.25V4.125C16.5 3.71079 16.1642 3.375 15.75 3.375ZM13.875 13.5C13.875 13.9142 13.5392 14.25 13.125 14.25H4.875C4.46079 14.25 4.125 13.9142 4.125 13.5V6H13.875V13.5ZM15 4.875V4.875H3V4.875H15Z"/>
                         </svg>
                       </button>
                       <button

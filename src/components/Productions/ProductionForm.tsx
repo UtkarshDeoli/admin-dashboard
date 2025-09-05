@@ -5,10 +5,11 @@ import { PlayProduction } from "@/types/play";
 
 interface ProductionFormProps {
   onSubmit: (form: Omit<PlayProduction, 'production_no'>) => Promise<void>;
+  onCancel?: () => void;
   initialData?: PlayProduction | null;
 }
 
-export default function ProductionForm({ onSubmit, initialData }: ProductionFormProps) {
+export default function ProductionForm({ onSubmit, onCancel, initialData }: ProductionFormProps) {
   const [playNo, setPlayNo] = useState<number | "">("");
   const [companyNo, setCompanyNo] = useState<number | "">("");
   const [startDate, setStartDate] = useState("");
@@ -88,30 +89,30 @@ export default function ProductionForm({ onSubmit, initialData }: ProductionForm
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <div>
-          <label className="mb-2.5 block text-black dark:text-white">Play No</label>
+          <label className="mb-2.5 block text-black dark:text-white">Play Name</label>
           <select
             value={String(playNo)}
             onChange={(e)=> setPlayNo(e.target.value === '' ? '' : Number(e.target.value))}
             className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 text-black outline-none transition focus:border-primary active:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
             required
           >
-            <option value="">Select play no</option>
+            <option value="">Select play</option>
             {plays.map((p:any) => (
-              <option key={p.play_no} value={p.play_no}>{p.play_no}</option>
+              <option key={p.play_no} value={p.play_no}>{p.title}</option>
             ))}
           </select>
         </div>
         <div>
-          <label className="mb-2.5 block text-black dark:text-white">Company No</label>
+          <label className="mb-2.5 block text-black dark:text-white">Company Name</label>
           <select
             value={String(companyNo)}
             onChange={(e)=> setCompanyNo(e.target.value === '' ? '' : Number(e.target.value))}
             className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 text-black outline-none transition focus:border-primary active:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
             required
           >
-            <option value="">Select company no</option>
+            <option value="">Select company</option>
             {companies.map((c:any) => (
-              <option key={c.company_no} value={c.company_no}>{c.company_no}</option>
+              <option key={c.company_no} value={c.company_no}>{c.name}</option>
             ))}
           </select>
         </div>
@@ -162,8 +163,23 @@ export default function ProductionForm({ onSubmit, initialData }: ProductionForm
         </label>
       </div>
 
-      <div className="flex items-center justify-end gap-3 pt-2">
-        <button type="submit" disabled={loading} className="rounded bg-primary px-4 py-2 text-sm text-white disabled:opacity-50">{loading ? 'Saving…' : 'Save'}</button>
+      <div className="flex items-center justify-end gap-4 pt-2">
+        <button 
+          type="submit" 
+          disabled={loading}
+          className="flex justify-center rounded bg-primary px-6 py-2 font-medium text-gray hover:bg-opacity-90 disabled:opacity-50"
+        >
+          {loading ? 'Updating...' : (initialData ? 'Update' : 'Save')}
+        </button>
+        {onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="flex justify-center rounded border border-stroke px-6 py-2 font-medium text-black hover:shadow-1 dark:border-strokedark dark:text-white hover:border-black hover:dark:border-white"
+          >
+            Cancel
+          </button>
+        )}
       </div>
     </form>
   );

@@ -177,10 +177,6 @@ const menuGroups = [
         label:"Plays",
         route:"/plays",
         children:[
-          {
-            label:"Contributors",
-            route:"/plays/contributors",
-          },
          {
           label:"Productions",
           route:"/plays/productions",

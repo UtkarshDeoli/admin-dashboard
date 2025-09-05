@@ -5,18 +5,19 @@ export async function GET(request: NextRequest) {
   try {
     const result = await query(
       `SELECT 
-         production_no,
-         play_no,
-         company_no,
-         to_char(start_date, 'YYYY-MM-DD') AS start_date,
-         to_char(end_date,   'YYYY-MM-DD') AS end_date,
-         season,
-         festival,
-         canceled,
-         archived
-       FROM play_productions 
-       WHERE archived = false 
-       ORDER BY start_date DESC`
+         p.production_no,
+         p.play_no,
+         p.company_no,
+         c.name AS company_name,
+         to_char(p.start_date, 'YYYY-MM-DD') AS start_date,
+         to_char(p.end_date,   'YYYY-MM-DD') AS end_date,
+         p.season,
+         p.festival,
+         p.canceled,
+         p.archived
+       FROM system.play_productions p
+       LEFT JOIN system.companies c ON c.company_no = p.company_no
+       ORDER BY p.start_date DESC`
     );
     
     return NextResponse.json(result.rows);
@@ -48,7 +49,7 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await query(
-      `INSERT INTO play_productions 
+      `INSERT INTO system.play_productions 
        (play_no, company_no, start_date, end_date, season, festival, canceled, archived) 
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
        RETURNING *`,
