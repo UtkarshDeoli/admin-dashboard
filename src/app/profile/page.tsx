@@ -5,9 +5,9 @@ import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Next.js Profile | TailAdmin - Next.js Dashboard Template",
+  title: "Profile | T Pannel - Admin Dashboard",
   description:
-    "This is Next.js Profile page for TailAdmin - Next.js Tailwind CSS Admin Dashboard Template",
+    "This is Profile page for T Pannel Admin Dashboard",
 };
 
 const Profile = () => {
