@@ -2,6 +2,14 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import PocketBase from "pocketbase";
+import {
+  getPocketBase,
+  setAuthStore,
+  PB_AUTH_STORE_KEY,
+  PocketBaseUser,
+  SUPERUSERS_COLLECTION,
+} from "@/lib/pocketbase";
 
 // User type definition
 export interface User {
@@ -20,6 +28,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signup: (name: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
+  pb: PocketBase;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -27,34 +36,49 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // Public routes that don't require authentication
 const publicRoutes = ["/auth/signin", "/auth/signup"];
 
-// Storage key for user data
-const USER_STORAGE_KEY = "t_pannel_user";
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [pb, setPb] = useState<PocketBase | null>(null);
   const router = useRouter();
   const pathname = usePathname();
 
-  // Check for existing session on mount
+  // Initialize PocketBase and check for existing session
   useEffect(() => {
-    const storedUser = localStorage.getItem(USER_STORAGE_KEY);
-    if (storedUser) {
+    const initAuth = async () => {
       try {
-        setUser(JSON.parse(storedUser));
+        const pocketbase = getPocketBase();
+        setPb(pocketbase);
+
+        // Load auth from localStorage
+        const storedAuth = localStorage.getItem(PB_AUTH_STORE_KEY);
+        if (storedAuth) {
+          const authData = JSON.parse(storedAuth);
+          pocketbase.authStore.save(authData.token, authData.model);
+
+          if (pocketbase.authStore.isValid) {
+            setUser(authData.model as User);
+          } else {
+            // Token expired, clear auth
+            localStorage.removeItem(PB_AUTH_STORE_KEY);
+            pocketbase.authStore.clear();
+          }
+        }
       } catch (error) {
-        console.error("Error parsing stored user:", error);
-        localStorage.removeItem(USER_STORAGE_KEY);
+        console.error("Error initializing auth:", error);
+      } finally {
+        setIsLoading(false);
       }
-    }
-    setIsLoading(false);
+    };
+
+    initAuth();
   }, []);
 
   // Handle route protection
   useEffect(() => {
     if (!isLoading) {
       const isPublicRoute = publicRoutes.some((route) => pathname?.startsWith(route));
-      
+
       if (!user && !isPublicRoute) {
         // Redirect to signin if not authenticated and trying to access protected route
         router.push("/auth/signin");
@@ -65,73 +89,57 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user, isLoading, pathname, router]);
 
-  // Login function - will be connected to API later
+  // Login function using _superusers collection
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    if (!pb) {
+      return { success: false, error: "PocketBase not initialized" };
+    }
+
     try {
       setIsLoading(true);
-      
-      // TODO: Replace with actual API call
-      // For now, simulate a successful login with mock data
-      // const response = await authApi.login(email, password);
-      
-      // Simulated delay for demo purposes
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      
-      // Mock user data - replace with actual API response
-      const mockUser: User = {
-        id: "1",
-        email,
-        name: email.split("@")[0],
-        role: "admin",
-      };
-      
-      setUser(mockUser);
-      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(mockUser));
-      
+
+      // Authenticate with _superusers collection
+      const authData = await pb.collection(SUPERUSERS_COLLECTION).authWithPassword(email, password);
+
+      // Save auth to localStorage
+      setAuthStore({
+        token: pb.authStore.token,
+        model: authData.record as unknown as PocketBaseUser,
+      });
+
+      setUser(authData.record as unknown as User);
+
       return { success: true };
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Login error:", error);
+
+      // Handle PocketBase error
+      if (error instanceof Error) {
+        const pbError = error as { data?: { message?: string } };
+        if (pbError.data?.message) {
+          return { success: false, error: pbError.data.message };
+        }
+      }
+
       return { success: false, error: "Invalid email or password" };
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Signup function - will be connected to API later
-  const signup = async (name: string, email: string, password: string): Promise<{ success: boolean; error?: string }> => {
-    try {
-      setIsLoading(true);
-      
-      // TODO: Replace with actual API call
-      // const response = await authApi.signup(name, email, password);
-      
-      // Simulated delay for demo purposes
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      
-      // Mock user data - replace with actual API response
-      const mockUser: User = {
-        id: "1",
-        email,
-        name,
-        role: "admin",
-      };
-      
-      setUser(mockUser);
-      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(mockUser));
-      
-      return { success: true };
-    } catch (error) {
-      console.error("Signup error:", error);
-      return { success: false, error: "Failed to create account" };
-    } finally {
-      setIsLoading(false);
-    }
+  // Signup function - Not available for superusers (admin only)
+  // Superusers must be created directly in PocketBase dashboard
+  const signup = async (_name: string, _email: string, _password: string): Promise<{ success: boolean; error?: string }> => {
+    return { success: false, error: "Superuser accounts cannot be created through this interface. Please create them in the PocketBase dashboard." };
   };
 
   // Logout function
   const logout = () => {
+    if (pb) {
+      pb.authStore.clear();
+    }
+    setAuthStore(null);
     setUser(null);
-    localStorage.removeItem(USER_STORAGE_KEY);
     router.push("/auth/signin");
   };
 
@@ -142,6 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     login,
     signup,
     logout,
+    pb: pb || getPocketBase(),
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

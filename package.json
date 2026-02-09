@@ -10,14 +10,18 @@
   },
   "dependencies": {
     "apexcharts": "^4.5.0",
+    "firebase-admin": "^13.6.1",
     "flatpickr": "^4.6.13",
+    "jsonwebtoken": "^9.0.3",
     "jsvectormap": "^1.6.0",
     "next": "^16.1.6",
+    "pocketbase": "^0.26.8",
     "react": "^18",
     "react-apexcharts": "^1.7.0",
     "react-dom": "^18"
   },
   "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
