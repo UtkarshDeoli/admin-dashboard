@@ -1,19 +1,14 @@
-import ECommerce from "@/components/Dashboard/E-commerce";
-import { Metadata } from "next";
-import DefaultLayout from "@/components/Layouts/DefaultLayout";
+"use client";
 
-export const metadata: Metadata = {
-  title:
-    "Dashboard | T Pannel - Admin Dashboard",
-  description: "This is T Pannel Admin Dashboard",
-};
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
-  return (
-    <>
-      <DefaultLayout>
-        <ECommerce />
-      </DefaultLayout>
-    </>
-  );
+  const router = useRouter();
+
+  useEffect(() => {
+    router.push("/business");
+  }, [router]);
+
+  return null;
 }

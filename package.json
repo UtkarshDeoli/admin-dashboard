@@ -6,8 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
-  },
+    "lint": "next lint",
+    "deploy": "next build && ssh -i ~/.ssh/city_sync_gcloud utkarsh@35.244.45.198 'rm -rf /home/utkarsh/backend/pb_public/*' && scp -i ~/.ssh/city_sync_gcloud -r ./out/* utkarsh@35.244.45.198:/home/utkarsh/backend/pb_public"  },
   "dependencies": {
     "apexcharts": "^4.5.0",
     "firebase-admin": "^13.6.1",
