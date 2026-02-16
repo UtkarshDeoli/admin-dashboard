@@ -1,8 +1,3 @@
-/**
- * API Index
- * Export all API modules from a single location
- */
-
 // Re-export central API utilities
 export * from "@/lib/api";
 
@@ -16,13 +11,7 @@ export * as settingsApi from "./settings.api";
 export { login, signup, logout, requestPasswordReset, confirmPasswordReset, refreshToken } from "./auth.api";
 export { 
   getUsers, 
-  getUserById, 
-  getCurrentUser, 
-  createUser, 
-  updateUser, 
-  updateCurrentUser, 
-  deleteUser, 
-  changePassword 
+  getUserById
 } from "./users.api";
 export { 
   getDashboardStats, 
