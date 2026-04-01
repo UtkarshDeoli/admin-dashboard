@@ -33,8 +33,11 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Public routes that don't require authentication
-const publicRoutes = ["/auth/signin", "/auth/signup"];
+// Routes that can be visited without authentication
+const unauthAllowedRoutes = ["/auth/signin", "/auth/signup", "/account-deletion"];
+
+// Only auth pages should redirect authenticated users to home
+const authPages = ["/auth/signin", "/auth/signup"];
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -77,13 +80,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Handle route protection
   useEffect(() => {
     if (!isLoading) {
-      const isPublicRoute = publicRoutes.some((route) => pathname?.startsWith(route));
+      const isUnauthAllowedRoute = unauthAllowedRoutes.some((route) => pathname?.startsWith(route));
+      const isAuthPage = authPages.some((route) => pathname?.startsWith(route));
 
-      if (!user && !isPublicRoute) {
+      if (!user && !isUnauthAllowedRoute) {
         // Redirect to signin if not authenticated and trying to access protected route
         router.push("/auth/signin");
-      } else if (user && isPublicRoute) {
-        // Redirect to home if authenticated and trying to access auth pages
+      } else if (user && isAuthPage) {
+        // Redirect to home if authenticated and trying to access auth pages only
         router.push("/");
       }
     }

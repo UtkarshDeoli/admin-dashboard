@@ -1,5 +1,5 @@
 {
-  "name": "free-nextjs-admin-dashboard",
+  "name": "utkarsh-dashboard",
   "version": "1.3.5",
   "private": true,
   "scripts": {
@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "deploy": "next build && ssh -i ~/.ssh/city_sync_gcloud utkarsh@35.244.45.198 'rm -rf /home/utkarsh/backend/pb_public/*' && scp -i ~/.ssh/city_sync_gcloud -r ./out/* utkarsh@35.244.45.198:/home/utkarsh/backend/pb_public"  },
+    "build:docker": "docker buildx build --platform linux/amd64 -t utkarshdeoli/city-sync:latest --push .",
+    "deploy:docker": "ssh -i ~/.ssh/city_sync_gcloud utkarsh@34.180.34.186 'docker pull utkarshdeoli/city-sync:latest && docker stop city-sync 2>/dev/null || true && docker rm -f city-sync 2>/dev/null || true && docker kill $(docker ps -q -f ancestor=utkarshdeoli/city-sync) 2>/dev/null || true && docker run -d --name city-sync --restart unless-stopped -p 3000:3000 utkarshdeoli/city-sync:latest && docker image prune -f'"
+  },
   "dependencies": {
     "apexcharts": "^4.5.0",
     "firebase-admin": "^13.6.1",

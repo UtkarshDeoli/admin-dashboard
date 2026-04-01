@@ -11,6 +11,11 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Public account deletion page for Google Play compliance
+  if (pathname.startsWith("/account-deletion")) {
+    return NextResponse.next();
+  }
+
   // Allow API routes
   if (pathname.startsWith("/api/")) {
     return NextResponse.next();
@@ -20,7 +25,7 @@ export function middleware(request: NextRequest) {
   if (
     pathname === "/" ||
     pathname.startsWith("/business") ||
-    pathname.startsWith("/users")
+    pathname.startsWith("/users") ||
   ) {
     return NextResponse.next();
   }

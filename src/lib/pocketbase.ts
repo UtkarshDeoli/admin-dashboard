@@ -7,7 +7,8 @@ export const POCKETBASE_URL = process.env.NEXT_PUBLIC_POCKETBASE_URL || 'https:/
 export const SUPERUSERS_COLLECTION = '_superusers';
 
 // Users collection name
-export const USERS_COLLECTION = 'users';
+export const USERS_COLLECTION = 'User';
+export const BUSINESS_COLLECTION = 'Business';
 
 // Create a singleton PocketBase instance
 let pb: PocketBase | null = null;
