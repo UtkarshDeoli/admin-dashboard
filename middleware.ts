@@ -25,7 +25,7 @@ export function middleware(request: NextRequest) {
   if (
     pathname === "/" ||
     pathname.startsWith("/business") ||
-    pathname.startsWith("/users") ||
+    pathname.startsWith("/users")
   ) {
     return NextResponse.next();
   }
