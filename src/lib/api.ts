@@ -226,7 +226,7 @@ export function clearAuthToken(): void {
 }
 
 // Export default object with all methods
-export default {
+const api = {
   fetch: fetchApi,
   get,
   post,
@@ -237,3 +237,5 @@ export default {
   getAuthToken,
   clearAuthToken,
 };
+
+export default api;

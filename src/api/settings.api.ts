@@ -56,7 +56,7 @@ export async function getSettings(): Promise<ApiResponse<AppSettings>> {
  * Update general settings
  */
 export async function updateGeneralSettings(
-  settings: Partial<AppSettings["general"]>
+  settings: Partial<AppSettings["general"]>,
 ): Promise<ApiResponse<AppSettings["general"]>> {
   return put<AppSettings["general"]>("/settings/general", settings);
 }
@@ -65,7 +65,7 @@ export async function updateGeneralSettings(
  * Update notification settings
  */
 export async function updateNotificationSettings(
-  settings: Partial<NotificationSettings>
+  settings: Partial<NotificationSettings>,
 ): Promise<ApiResponse<NotificationSettings>> {
   return put<NotificationSettings>("/settings/notifications", settings);
 }
@@ -74,7 +74,7 @@ export async function updateNotificationSettings(
  * Update security settings
  */
 export async function updateSecuritySettings(
-  settings: Partial<SecuritySettings>
+  settings: Partial<SecuritySettings>,
 ): Promise<ApiResponse<SecuritySettings>> {
   return put<SecuritySettings>("/settings/security", settings);
 }
@@ -83,15 +83,17 @@ export async function updateSecuritySettings(
  * Update appearance settings
  */
 export async function updateAppearanceSettings(
-  settings: Partial<AppSettings["appearance"]>
+  settings: Partial<AppSettings["appearance"]>,
 ): Promise<ApiResponse<AppSettings["appearance"]>> {
   return put<AppSettings["appearance"]>("/settings/appearance", settings);
 }
 
-export default {
+const settingsApi = {
   getSettings,
   updateGeneralSettings,
   updateNotificationSettings,
   updateSecuritySettings,
   updateAppearanceSettings,
 };
+
+export default settingsApi;

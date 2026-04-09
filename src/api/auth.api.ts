@@ -3,7 +3,12 @@
  * Contains all API calls related to authentication using PocketBase
  */
 
-import { getPocketBase, setAuthStore, PocketBaseUser, SUPERUSERS_COLLECTION } from "@/lib/pocketbase";
+import {
+  getPocketBase,
+  setAuthStore,
+  PocketBaseUser,
+  SUPERUSERS_COLLECTION,
+} from "@/lib/pocketbase";
 import PocketBase from "pocketbase";
 
 // Types
@@ -57,11 +62,13 @@ function toAuthResponse(pb: PocketBase, record: PocketBaseUser): AuthResponse {
  */
 export async function login(
   email: string,
-  password: string
+  password: string,
 ): Promise<{ success: boolean; data?: AuthResponse; error?: string }> {
   try {
     const pb = getPocketBase();
-    const authData = await pb.collection(SUPERUSERS_COLLECTION).authWithPassword(email, password);
+    const authData = await pb
+      .collection(SUPERUSERS_COLLECTION)
+      .authWithPassword(email, password);
 
     // Save auth to localStorage
     setAuthStore({
@@ -94,9 +101,13 @@ export async function login(
 export async function signup(
   _name: string,
   _email: string,
-  _password: string
+  _password: string,
 ): Promise<{ success: boolean; data?: AuthResponse; error?: string }> {
-  return { success: false, error: "Superuser accounts cannot be created through this interface. Please create them in the PocketBase dashboard." };
+  return {
+    success: false,
+    error:
+      "Superuser accounts cannot be created through this interface. Please create them in the PocketBase dashboard.",
+  };
 }
 
 /**
@@ -112,7 +123,7 @@ export async function logout(): Promise<void> {
  * Request password reset
  */
 export async function requestPasswordReset(
-  email: string
+  email: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const pb = getPocketBase();
@@ -138,18 +149,25 @@ export async function requestPasswordReset(
  */
 export async function confirmPasswordReset(
   _token: string,
-  _password: string
+  _password: string,
 ): Promise<{ success: boolean; error?: string }> {
   // PocketBase doesn't use tokens for password reset confirmation
   // The password reset is done through the email confirmation flow
-  return { success: false, error: "Use the password reset link sent to your email" };
+  return {
+    success: false,
+    error: "Use the password reset link sent to your email",
+  };
 }
 
 /**
  * Refresh authentication token
  * Note: PocketBase handles token refresh automatically via authStore
  */
-export async function refreshToken(): Promise<{ success: boolean; token?: string; error?: string }> {
+export async function refreshToken(): Promise<{
+  success: boolean;
+  token?: string;
+  error?: string;
+}> {
   const pb = getPocketBase();
 
   if (!pb.authStore.isValid) {
@@ -165,7 +183,11 @@ export async function refreshToken(): Promise<{ success: boolean; token?: string
 /**
  * Get current authenticated user
  */
-export async function getCurrentUser(): Promise<{ success: boolean; data?: AuthResponse; error?: string }> {
+export async function getCurrentUser(): Promise<{
+  success: boolean;
+  data?: AuthResponse;
+  error?: string;
+}> {
   try {
     const pb = getPocketBase();
 
@@ -183,7 +205,7 @@ export async function getCurrentUser(): Promise<{ success: boolean; data?: AuthR
   }
 }
 
-export default {
+const authApi = {
   login,
   signup,
   logout,
@@ -192,3 +214,5 @@ export default {
   refreshToken,
   getCurrentUser,
 };
+
+export default authApi;

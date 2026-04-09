@@ -36,7 +36,7 @@ export interface UserListResponse {
 export async function getUsers(
   page: number = 1,
   perPage: number = 50,
-  filter?: string
+  filter?: string,
 ): Promise<{ success: boolean; data?: UserListResponse; error?: string }> {
   try {
     const pb = getPocketBase();
@@ -57,10 +57,10 @@ export async function getUsers(
   } catch (error: unknown) {
     // Ignore cancelled requests (PocketBase auto-cancellation)
     const pbError = error as { status?: number; message?: string };
-    if (pbError.status === 0 || pbError.message?.includes('aborted')) {
-      return { success: false, error: 'Request cancelled' };
+    if (pbError.status === 0 || pbError.message?.includes("aborted")) {
+      return { success: false, error: "Request cancelled" };
     }
-    
+
     console.error("Get users error:", error);
     if (error instanceof Error) {
       const err = error as { data?: { message?: string } };
@@ -76,7 +76,7 @@ export async function getUsers(
  * Get all users
  */
 export async function getAllUsers(
-  sort?: string
+  sort?: string,
 ): Promise<{ success: boolean; data?: User[]; error?: string }> {
   try {
     const pb = getPocketBase();
@@ -88,10 +88,10 @@ export async function getAllUsers(
   } catch (error: unknown) {
     // Ignore cancelled requests (PocketBase auto-cancellation)
     const pbError = error as { status?: number; message?: string };
-    if (pbError.status === 0 || pbError.message?.includes('aborted')) {
-      return { success: false, error: 'Request cancelled' };
+    if (pbError.status === 0 || pbError.message?.includes("aborted")) {
+      return { success: false, error: "Request cancelled" };
     }
-    
+
     console.error("Get all users error:", error);
     return { success: false, error: "Failed to fetch users" };
   }
@@ -101,7 +101,7 @@ export async function getAllUsers(
  * Get a single user by ID
  */
 export async function getUserById(
-  id: string
+  id: string,
 ): Promise<{ success: boolean; data?: User; error?: string }> {
   try {
     const pb = getPocketBase();
@@ -110,10 +110,10 @@ export async function getUserById(
     return { success: true, data: record as unknown as User };
   } catch (error: unknown) {
     // Ignore cancelled requests
-    if (error instanceof Error && error.name === 'AbortError') {
-      return { success: false, error: 'Request cancelled' };
+    if (error instanceof Error && error.name === "AbortError") {
+      return { success: false, error: "Request cancelled" };
     }
-    
+
     console.error("Get user by ID error:", error);
     return { success: false, error: "Failed to fetch user" };
   }
@@ -123,7 +123,7 @@ export async function getUserById(
  * Search users
  */
 export async function searchUsers(
-  query: string
+  query: string,
 ): Promise<{ success: boolean; data?: User[]; error?: string }> {
   try {
     const pb = getPocketBase();
@@ -134,18 +134,20 @@ export async function searchUsers(
     return { success: true, data: records as unknown as User[] };
   } catch (error: unknown) {
     // Ignore cancelled requests
-    if (error instanceof Error && error.name === 'AbortError') {
-      return { success: false, error: 'Request cancelled' };
+    if (error instanceof Error && error.name === "AbortError") {
+      return { success: false, error: "Request cancelled" };
     }
-    
+
     console.error("Search users error:", error);
     return { success: false, error: "Failed to search users" };
   }
 }
 
-export default {
+const usersApi = {
   getUsers,
   getAllUsers,
   getUserById,
   searchUsers,
 };
+
+export default usersApi;

@@ -42,7 +42,9 @@ export interface DashboardData {
 /**
  * Get dashboard statistics
  */
-export async function getDashboardStats(): Promise<ApiResponse<DashboardStats>> {
+export async function getDashboardStats(): Promise<
+  ApiResponse<DashboardStats>
+> {
   return get<DashboardStats>("/dashboard/stats");
 }
 
@@ -50,7 +52,7 @@ export async function getDashboardStats(): Promise<ApiResponse<DashboardStats>> 
  * Get revenue chart data
  */
 export async function getRevenueChart(
-  period: "week" | "month" | "year" = "month"
+  period: "week" | "month" | "year" = "month",
 ): Promise<ApiResponse<ChartData>> {
   return get<ChartData>(`/dashboard/charts/revenue?period=${period}`);
 }
@@ -59,7 +61,7 @@ export async function getRevenueChart(
  * Get recent activity
  */
 export async function getRecentActivity(
-  limit: number = 10
+  limit: number = 10,
 ): Promise<ApiResponse<RecentActivity[]>> {
   return get<RecentActivity[]>(`/dashboard/activity?limit=${limit}`);
 }
@@ -71,9 +73,11 @@ export async function getDashboardData(): Promise<ApiResponse<DashboardData>> {
   return get<DashboardData>("/dashboard");
 }
 
-export default {
+const dashboardApi = {
   getDashboardStats,
   getRevenueChart,
   getRecentActivity,
   getDashboardData,
 };
+
+export default dashboardApi;
