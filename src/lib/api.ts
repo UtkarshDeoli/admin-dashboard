@@ -3,8 +3,11 @@
  * This file contains the base fetch function and common API utilities
  */
 
+import { PB_AUTH_STORE_KEY } from "@/lib/pocketbase";
+
 // API Configuration
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
 
 // Common headers for API requests
 const getDefaultHeaders = (): HeadersInit => ({
@@ -13,11 +16,25 @@ const getDefaultHeaders = (): HeadersInit => ({
 
 // Get authorization header with token
 const getAuthHeaders = (): HeadersInit => {
-  const token = typeof window !== "undefined" ? localStorage.getItem("t_pannel_token") : null;
+  const token = getAuthToken();
   return {
     ...getDefaultHeaders(),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
+};
+
+const getPocketBaseToken = (): string | null => {
+  if (typeof window === "undefined") return null;
+
+  const stored = localStorage.getItem(PB_AUTH_STORE_KEY);
+  if (!stored) return null;
+
+  try {
+    const parsed = JSON.parse(stored) as { token?: string };
+    return parsed?.token || null;
+  } catch {
+    return null;
+  }
 };
 
 // Response type for API calls
@@ -44,7 +61,7 @@ export interface RequestOptions {
  */
 export async function fetchApi<T>(
   endpoint: string,
-  options: RequestOptions = {}
+  options: RequestOptions = {},
 ): Promise<ApiResponse<T>> {
   const {
     method = "GET",
@@ -83,7 +100,7 @@ export async function fetchApi<T>(
 
       // Handle 401 Unauthorized - redirect to login
       if (status === 401 && typeof window !== "undefined") {
-        localStorage.removeItem("t_pannel_token");
+        localStorage.removeItem(PB_AUTH_STORE_KEY);
         localStorage.removeItem("t_pannel_user");
         window.location.href = "/auth/signin";
       }
@@ -122,7 +139,7 @@ export async function fetchApi<T>(
  */
 export async function get<T>(
   endpoint: string,
-  options: Omit<RequestOptions, "method" | "body"> = {}
+  options: Omit<RequestOptions, "method" | "body"> = {},
 ): Promise<ApiResponse<T>> {
   return fetchApi<T>(endpoint, { ...options, method: "GET" });
 }
@@ -133,7 +150,7 @@ export async function get<T>(
 export async function post<T>(
   endpoint: string,
   body: Record<string, unknown> | unknown,
-  options: Omit<RequestOptions, "method" | "body"> = {}
+  options: Omit<RequestOptions, "method" | "body"> = {},
 ): Promise<ApiResponse<T>> {
   return fetchApi<T>(endpoint, { ...options, method: "POST", body });
 }
@@ -144,7 +161,7 @@ export async function post<T>(
 export async function put<T>(
   endpoint: string,
   body: Record<string, unknown> | unknown,
-  options: Omit<RequestOptions, "method" | "body"> = {}
+  options: Omit<RequestOptions, "method" | "body"> = {},
 ): Promise<ApiResponse<T>> {
   return fetchApi<T>(endpoint, { ...options, method: "PUT", body });
 }
@@ -155,7 +172,7 @@ export async function put<T>(
 export async function patch<T>(
   endpoint: string,
   body: Record<string, unknown> | unknown,
-  options: Omit<RequestOptions, "method" | "body"> = {}
+  options: Omit<RequestOptions, "method" | "body"> = {},
 ): Promise<ApiResponse<T>> {
   return fetchApi<T>(endpoint, { ...options, method: "PATCH", body });
 }
@@ -165,7 +182,7 @@ export async function patch<T>(
  */
 export async function del<T>(
   endpoint: string,
-  options: Omit<RequestOptions, "method"> = {}
+  options: Omit<RequestOptions, "method"> = {},
 ): Promise<ApiResponse<T>> {
   return fetchApi<T>(endpoint, { ...options, method: "DELETE" });
 }
@@ -175,7 +192,19 @@ export async function del<T>(
  */
 export function setAuthToken(token: string): void {
   if (typeof window !== "undefined") {
-    localStorage.setItem("t_pannel_token", token);
+    const stored = localStorage.getItem(PB_AUTH_STORE_KEY);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored) as Record<string, unknown>;
+        localStorage.setItem(
+          PB_AUTH_STORE_KEY,
+          JSON.stringify({ ...parsed, token }),
+        );
+        return;
+      } catch {}
+    }
+
+    localStorage.setItem(PB_AUTH_STORE_KEY, JSON.stringify({ token }));
   }
 }
 
@@ -183,10 +212,7 @@ export function setAuthToken(token: string): void {
  * Get auth token from localStorage
  */
 export function getAuthToken(): string | null {
-  if (typeof window !== "undefined") {
-    return localStorage.getItem("t_pannel_token");
-  }
-  return null;
+  return getPocketBaseToken();
 }
 
 /**
@@ -194,7 +220,7 @@ export function getAuthToken(): string | null {
  */
 export function clearAuthToken(): void {
   if (typeof window !== "undefined") {
-    localStorage.removeItem("t_pannel_token");
+    localStorage.removeItem(PB_AUTH_STORE_KEY);
     localStorage.removeItem("t_pannel_user");
   }
 }

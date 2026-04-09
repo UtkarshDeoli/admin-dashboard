@@ -3,7 +3,10 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { User, getAllUsers } from "@/api/users.api";
-import { sendNotification, getSelectedUserTokens } from "@/api/notification.api";
+import {
+  sendNotification,
+  getSelectedUserTokens,
+} from "@/api/notification.api";
 import { POCKETBASE_URL } from "@/lib/pocketbase";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
@@ -22,19 +25,26 @@ const UsersPage: React.FC = () => {
   const [notificationTitle, setNotificationTitle] = useState("");
   const [notificationBody, setNotificationBody] = useState("");
   const [notificationSending, setNotificationSending] = useState(false);
-  const [notificationResult, setNotificationResult] = useState<{ success: boolean; sent: number; failed: number } | null>(null);
-  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
+  const [notificationResult, setNotificationResult] = useState<{
+    success: boolean;
+    sent: number;
+    failed: number;
+  } | null>(null);
+  const [sortConfig, setSortConfig] = useState<{
+    key: string;
+    direction: "asc" | "desc";
+  } | null>(null);
 
   const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       const result = await getAllUsers("-created");
-      
+
       // Check if result has data (not cancelled)
       if (result.success && result.data) {
         setUsers(result.data);
-      } else if (result.error !== 'Request cancelled') {
+      } else if (result.error !== "Request cancelled") {
         setError(result.error || "Failed to fetch users");
       }
     } catch (err) {
@@ -46,15 +56,15 @@ const UsersPage: React.FC = () => {
 
   useEffect(() => {
     let mounted = true;
-    
+
     const loadData = async () => {
       if (mounted) {
         await fetchUsers();
       }
     };
-    
+
     loadData();
-    
+
     return () => {
       mounted = false;
     };
@@ -62,27 +72,29 @@ const UsersPage: React.FC = () => {
 
   // Filter users
   const filteredUsers = users.filter((user) => {
-    const matchesSearch = 
+    const phoneText = String(user.phone ?? "");
+    const matchesSearch =
       user.Name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.phone.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesGender = genderFilter === "all" || user.gender === genderFilter;
-    
+      phoneText.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesGender =
+      genderFilter === "all" || user.gender === genderFilter;
+
     return matchesSearch && matchesGender;
   });
 
   // Apply sorting
   const sortedUsers = [...filteredUsers].sort((a, b) => {
     if (!sortConfig) return 0;
-    
+
     const { key, direction } = sortConfig;
-    const multiplier = direction === 'asc' ? 1 : -1;
-    
+    const multiplier = direction === "asc" ? 1 : -1;
+
     switch (key) {
-      case 'name':
+      case "name":
         return a.Name.localeCompare(b.Name) * multiplier;
-      case 'email':
+      case "email":
         return a.email.localeCompare(b.email) * multiplier;
       default:
         return 0;
@@ -94,7 +106,7 @@ const UsersPage: React.FC = () => {
     if (selectAll) {
       setSelectedUsers(new Set());
     } else {
-      setSelectedUsers(new Set(filteredUsers.map(u => u.id)));
+      setSelectedUsers(new Set(filteredUsers.map((u) => u.id)));
     }
     setSelectAll(!selectAll);
   };
@@ -113,12 +125,16 @@ const UsersPage: React.FC = () => {
 
   // Handle sorting
   const handleSort = (key: string) => {
-    let direction: 'asc' | 'desc' = 'asc';
-    
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
+    let direction: "asc" | "desc" = "asc";
+
+    if (
+      sortConfig &&
+      sortConfig.key === key &&
+      sortConfig.direction === "asc"
+    ) {
+      direction = "desc";
     }
-    
+
     setSortConfig({ key, direction });
   };
 
@@ -157,7 +173,7 @@ const UsersPage: React.FC = () => {
     setNotificationSending(true);
 
     // Get FCM tokens from selected users
-    const selectedUsersArray = users.filter(u => selectedUsers.has(u.id));
+    const selectedUsersArray = users.filter((u) => selectedUsers.has(u.id));
     const tokens = getSelectedUserTokens(selectedUsersArray);
 
     if (tokens.length === 0) {
@@ -169,7 +185,7 @@ const UsersPage: React.FC = () => {
     const result = await sendNotification(tokens, {
       title: notificationTitle,
       body: notificationBody,
-      data: { type: 'user_notification' },
+      data: { type: "user_notification" },
     });
 
     setNotificationResult(result);
@@ -189,13 +205,15 @@ const UsersPage: React.FC = () => {
   const getGenderBadge = (gender: string) => {
     const genderColors: Record<string, string> = {
       Male: "bg-blue-100 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400",
-      Female: "bg-pink-100 text-pink-600 dark:bg-pink-900/20 dark:text-pink-400",
+      Female:
+        "bg-pink-100 text-pink-600 dark:bg-pink-900/20 dark:text-pink-400",
     };
 
     return (
       <span
         className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-          genderColors[gender] || "bg-gray-100 text-gray-600 dark:bg-gray-900/20 dark:text-gray-400"
+          genderColors[gender] ||
+          "bg-gray-100 text-gray-600 dark:bg-gray-900/20 dark:text-gray-400"
         }`}
       >
         {gender}
@@ -206,7 +224,7 @@ const UsersPage: React.FC = () => {
   return (
     <DefaultLayout>
       <Breadcrumb pageName="Users" />
-      
+
       {loading ? (
         <div className="flex h-96 items-center justify-center">
           <div className="h-14 w-14 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
@@ -301,40 +319,51 @@ const UsersPage: React.FC = () => {
 
           {/* Stats */}
           <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-4">
-            <div className="rounded-lg border border-stroke bg-gray-1 p-4 dark:border-strokedark dark:bg-meta-4">
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total Users</p>
+            <div className="bg-gray-1 rounded-lg border border-stroke p-4 dark:border-strokedark dark:bg-meta-4">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Total Users
+              </p>
               <p className="mt-1 text-2xl font-bold text-black dark:text-white">
                 {users.length}
               </p>
             </div>
-            <div className="rounded-lg border border-stroke bg-gray-1 p-4 dark:border-strokedark dark:bg-meta-4">
+            <div className="bg-gray-1 rounded-lg border border-stroke p-4 dark:border-strokedark dark:bg-meta-4">
               <p className="text-sm text-gray-500 dark:text-gray-400">Male</p>
               <p className="mt-1 text-2xl font-bold text-blue-600">
                 {users.filter((u) => u.gender === "Male").length}
               </p>
             </div>
-            <div className="rounded-lg border border-stroke bg-gray-1 p-4 dark:border-strokedark dark:bg-meta-4">
+            <div className="bg-gray-1 rounded-lg border border-stroke p-4 dark:border-strokedark dark:bg-meta-4">
               <p className="text-sm text-gray-500 dark:text-gray-400">Female</p>
               <p className="mt-1 text-2xl font-bold text-pink-600">
                 {users.filter((u) => u.gender === "Female").length}
               </p>
             </div>
-            <div className="rounded-lg border border-stroke bg-gray-1 p-4 dark:border-strokedark dark:bg-meta-4">
-              <p className="text-sm text-gray-500 dark:text-gray-400">Recent Signups</p>
+            <div className="bg-gray-1 rounded-lg border border-stroke p-4 dark:border-strokedark dark:bg-meta-4">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Recent Signups
+              </p>
               <p className="mt-1 text-2xl font-bold text-success">
-                {users.filter((u) => {
-                  const createdDate = new Date(u.created);
-                  const weekAgo = new Date();
-                  weekAgo.setDate(weekAgo.getDate() - 7);
-                  return createdDate > weekAgo;
-                }).length}
+                {
+                  users.filter((u) => {
+                    const createdDate = new Date(u.created);
+                    const weekAgo = new Date();
+                    weekAgo.setDate(weekAgo.getDate() - 7);
+                    return createdDate > weekAgo;
+                  }).length
+                }
               </p>
             </div>
           </div>
 
           {/* Table */}
           <div className="flex flex-col">
-            <div className="grid rounded-sm bg-gray-2 dark:bg-meta-4" style={{ gridTemplateColumns: '48px 1fr 200px 120px 100px 100px 120px' }}>
+            <div
+              className="grid rounded-sm bg-gray-2 dark:bg-meta-4"
+              style={{
+                gridTemplateColumns: "48px 1fr 200px 120px 100px 100px 120px",
+              }}
+            >
               <div className="flex items-center justify-center p-2 xl:p-3">
                 <input
                   type="checkbox"
@@ -345,47 +374,77 @@ const UsersPage: React.FC = () => {
               </div>
               <div className="p-2.5 xl:p-4">
                 <button
-                  onClick={() => handleSort('name')}
-                  className="flex items-center gap-1 text-sm font-medium uppercase xsm:text-base hover:text-primary"
+                  onClick={() => handleSort("name")}
+                  className="flex items-center gap-1 text-sm font-medium uppercase hover:text-primary xsm:text-base"
                 >
                   User
-                  {sortConfig?.key === 'name' && (
-                    <svg className={`h-4 w-4 transform ${sortConfig.direction === 'desc' ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                  {sortConfig?.key === "name" && (
+                    <svg
+                      className={`h-4 w-4 transform ${sortConfig.direction === "desc" ? "rotate-180" : ""}`}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 15l7-7 7 7"
+                      />
                     </svg>
                   )}
                 </button>
               </div>
               <div className="p-2.5 text-center xl:p-4">
                 <button
-                  onClick={() => handleSort('email')}
-                  className="flex items-center justify-center gap-1 text-sm font-medium uppercase xsm:text-base hover:text-primary"
+                  onClick={() => handleSort("email")}
+                  className="flex items-center justify-center gap-1 text-sm font-medium uppercase hover:text-primary xsm:text-base"
                 >
                   Email
-                  {sortConfig?.key === 'email' && (
-                    <svg className={`h-4 w-4 transform ${sortConfig.direction === 'desc' ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                  {sortConfig?.key === "email" && (
+                    <svg
+                      className={`h-4 w-4 transform ${sortConfig.direction === "desc" ? "rotate-180" : ""}`}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 15l7-7 7 7"
+                      />
                     </svg>
                   )}
                 </button>
               </div>
               <div className="p-2.5 text-center xl:p-4">
-                <h5 className="text-sm font-medium uppercase xsm:text-base">Phone</h5>
+                <h5 className="text-sm font-medium uppercase xsm:text-base">
+                  Phone
+                </h5>
               </div>
               <div className="p-2.5 text-center xl:p-4">
-                <h5 className="text-sm font-medium uppercase xsm:text-base">Gender</h5>
+                <h5 className="text-sm font-medium uppercase xsm:text-base">
+                  Gender
+                </h5>
               </div>
               <div className="p-2.5 text-center xl:p-4">
-                <h5 className="text-sm font-medium uppercase xsm:text-base">Date of Birth</h5>
+                <h5 className="text-sm font-medium uppercase xsm:text-base">
+                  Date of Birth
+                </h5>
               </div>
               <div className="p-2.5 text-center xl:p-4">
-                <h5 className="text-sm font-medium uppercase xsm:text-base">Joined</h5>
+                <h5 className="text-sm font-medium uppercase xsm:text-base">
+                  Joined
+                </h5>
               </div>
             </div>
 
             {filteredUsers.length === 0 ? (
               <div className="flex items-center justify-center p-8">
-                <p className="text-gray-500 dark:text-gray-400">No users found</p>
+                <p className="text-gray-500 dark:text-gray-400">
+                  No users found
+                </p>
               </div>
             ) : (
               sortedUsers.map((user, key) => (
@@ -394,13 +453,19 @@ const UsersPage: React.FC = () => {
                     key === sortedUsers.length - 1
                       ? ""
                       : "border-b border-stroke dark:border-strokedark"
-                  } ${selectedUsers.has(user.id) ? 'bg-primary/5 dark:bg-primary/10' : ''}`}
+                  } ${selectedUsers.has(user.id) ? "bg-primary/5 dark:bg-primary/10" : ""}`}
                   key={user.id}
                   onClick={() => openUserDetails(user)}
-                  style={{ gridTemplateColumns: '48px 1fr 200px 120px 100px 100px 120px' }}
+                  style={{
+                    gridTemplateColumns:
+                      "48px 1fr 200px 120px 100px 100px 120px",
+                  }}
                 >
                   {/* Checkbox */}
-                  <div className="flex items-center justify-center p-2 xl:p-3" onClick={(e) => e.stopPropagation()}>
+                  <div
+                    className="flex items-center justify-center p-2 xl:p-3"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <input
                       type="checkbox"
                       checked={selectedUsers.has(user.id)}
@@ -455,9 +520,7 @@ const UsersPage: React.FC = () => {
                   {/* Date of Birth */}
                   <div className="flex items-center justify-center p-2.5 xl:p-4">
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {user.dateOfBirth
-                        ? formatDate(user.dateOfBirth)
-                        : "-"}
+                      {user.dateOfBirth ? formatDate(user.dateOfBirth) : "-"}
                     </p>
                   </div>
 
@@ -482,10 +545,13 @@ const UsersPage: React.FC = () => {
             className="fixed inset-0 z-50 bg-black/50"
             onClick={closeNotificationDialog}
           />
-          
+
           {/* Dialog Panel */}
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="w-full max-w-md rounded-lg bg-white dark:bg-boxdark shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div
+              className="w-full max-w-md rounded-lg bg-white shadow-xl dark:bg-boxdark"
+              onClick={(e) => e.stopPropagation()}
+            >
               {/* Header */}
               <div className="flex items-center justify-between border-b border-stroke px-6 py-4 dark:border-strokedark">
                 <h3 className="text-lg font-bold text-black dark:text-white">
@@ -495,18 +561,29 @@ const UsersPage: React.FC = () => {
                   onClick={closeNotificationDialog}
                   className="text-gray-400 hover:text-black dark:hover:text-white"
                 >
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               </div>
-              
+
               {/* Content */}
               <div className="p-6">
                 <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
-                  Sending to {selectedUsers.size} selected user(s) with FCM tokens.
+                  Sending to {selectedUsers.size} selected user(s) with FCM
+                  tokens.
                 </p>
-                
+
                 {/* Title Input */}
                 <div className="mb-4">
                   <label className="mb-2 block text-sm font-medium text-black dark:text-white">
@@ -520,7 +597,7 @@ const UsersPage: React.FC = () => {
                     className="w-full rounded-lg border border-stroke bg-transparent px-4 py-2.5 text-black outline-none focus:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
                   />
                 </div>
-                
+
                 {/* Body Input */}
                 <div className="mb-4">
                   <label className="mb-2 block text-sm font-medium text-black dark:text-white">
@@ -534,20 +611,21 @@ const UsersPage: React.FC = () => {
                     className="w-full rounded-lg border border-stroke bg-transparent px-4 py-2.5 text-black outline-none focus:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
                   />
                 </div>
-                
+
                 {/* Result */}
                 {notificationResult && (
-                  <div className={`mb-4 rounded-lg p-3 ${notificationResult.success ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'}`}>
+                  <div
+                    className={`mb-4 rounded-lg p-3 ${notificationResult.success ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}
+                  >
                     <p className="text-sm">
                       {notificationResult.success
-                        ? `Successfully sent to ${notificationResult.sent} device(s)${notificationResult.failed > 0 ? `, ${notificationResult.failed} failed` : ''}`
-                        : `Failed to send. Sent: ${notificationResult.sent}, Failed: ${notificationResult.failed}`
-                      }
+                        ? `Successfully sent to ${notificationResult.sent} device(s)${notificationResult.failed > 0 ? `, ${notificationResult.failed} failed` : ""}`
+                        : `Failed to send. Sent: ${notificationResult.sent}, Failed: ${notificationResult.failed}`}
                     </p>
                   </div>
                 )}
               </div>
-              
+
               {/* Footer */}
               <div className="flex gap-3 border-t border-stroke px-6 py-4 dark:border-strokedark">
                 <button
@@ -558,10 +636,14 @@ const UsersPage: React.FC = () => {
                 </button>
                 <button
                   onClick={handleSendNotification}
-                  disabled={notificationSending || !notificationTitle.trim() || !notificationBody.trim()}
+                  disabled={
+                    notificationSending ||
+                    !notificationTitle.trim() ||
+                    !notificationBody.trim()
+                  }
                   className="flex-1 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {notificationSending ? 'Sending...' : 'Send'}
+                  {notificationSending ? "Sending..." : "Send"}
                 </button>
               </div>
             </div>
@@ -577,9 +659,9 @@ const UsersPage: React.FC = () => {
             className="fixed inset-0 z-40 bg-black/50 transition-opacity"
             onClick={closeModal}
           />
-          
+
           {/* Modal Panel */}
-          <div className="fixed inset-y-0 right-0 z-50 w-full max-w-md overflow-y-auto bg-white dark:bg-boxdark shadow-xl transition-transform">
+          <div className="fixed inset-y-0 right-0 z-50 w-full max-w-md overflow-y-auto bg-white shadow-xl transition-transform dark:bg-boxdark">
             <div className="flex h-full flex-col">
               {/* Header */}
               <div className="flex items-center justify-between border-b border-stroke px-6 py-4 dark:border-strokedark">
@@ -645,31 +727,41 @@ const UsersPage: React.FC = () => {
                     </h5>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Full Name</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Full Name
+                        </p>
                         <p className="text-sm font-medium text-black dark:text-white">
                           {selectedUser.Name}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Email</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Email
+                        </p>
                         <p className="text-sm font-medium text-black dark:text-white">
                           {selectedUser.email}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Phone</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Phone
+                        </p>
                         <p className="text-sm font-medium text-black dark:text-white">
                           {selectedUser.phone || "-"}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Gender</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Gender
+                        </p>
                         <p className="text-sm font-medium text-black dark:text-white">
                           {selectedUser.gender || "-"}
                         </p>
                       </div>
                       <div className="col-span-2">
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Date of Birth</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Date of Birth
+                        </p>
                         <p className="text-sm font-medium text-black dark:text-white">
                           {selectedUser.dateOfBirth
                             ? formatDate(selectedUser.dateOfBirth)
@@ -686,13 +778,17 @@ const UsersPage: React.FC = () => {
                     </h5>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Created</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Created
+                        </p>
                         <p className="text-sm font-medium text-black dark:text-white">
                           {formatDate(selectedUser.created)}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Last Updated</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Last Updated
+                        </p>
                         <p className="text-sm font-medium text-black dark:text-white">
                           {formatDate(selectedUser.updated)}
                         </p>
@@ -707,8 +803,10 @@ const UsersPage: React.FC = () => {
                         Push Notifications
                       </h5>
                       <div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">FCM Token</p>
-                        <p className="text-xs font-mono text-black dark:text-white break-all">
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          FCM Token
+                        </p>
+                        <p className="font-mono break-all text-xs text-black dark:text-white">
                           {selectedUser.fcm.substring(0, 50)}...
                         </p>
                       </div>
@@ -721,7 +819,7 @@ const UsersPage: React.FC = () => {
               <div className="border-t border-stroke px-6 py-4 dark:border-strokedark">
                 <button
                   onClick={closeModal}
-                  className="w-full rounded-lg border border-stroke bg-gray-1 px-4 py-2 text-sm font-medium text-black hover:bg-gray-2 dark:border-strokedark dark:bg-meta-4 dark:text-white"
+                  className="bg-gray-1 w-full rounded-lg border border-stroke px-4 py-2 text-sm font-medium text-black hover:bg-gray-2 dark:border-strokedark dark:bg-meta-4 dark:text-white"
                 >
                   Close
                 </button>

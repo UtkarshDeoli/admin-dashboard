@@ -3,14 +3,17 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { Business, getAllBusinesses } from "@/api/business.api";
-import { sendNotification, getSelectedBusinessTokens } from "@/api/notification.api";
+import {
+  sendNotification,
+  getSelectedBusinessTokens,
+} from "@/api/notification.api";
 import { POCKETBASE_URL } from "@/lib/pocketbase";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 
 // Helper function to format address object
 const formatAddress = (address: Business["address"]) => {
-  if (!address || typeof address === 'string') return "-";
+  if (!address || typeof address === "string") return "-";
   const parts = [
     address.address,
     address.city,
@@ -23,22 +26,30 @@ const formatAddress = (address: Business["address"]) => {
 
 // Helper function to format location object
 const formatLocation = (location: Business["location"]) => {
-  if (!location || typeof location === 'string') return "-";
+  if (!location || typeof location === "string") return "-";
   return `${location.lat.toFixed(6)}, ${location.long.toFixed(6)}`;
 };
 
 // Helper function to format days of operation
 const formatDaysOfOperation = (days: Business["days_of_operation"]) => {
-  if (!days || typeof days === 'string') return "-";
-  const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-  const openDays = dayNames.filter(day => days && days[day]);
+  if (!days || typeof days === "string") return "-";
+  const dayNames = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+  ];
+  const openDays = dayNames.filter((day) => days && days[day]);
   if (openDays.length === 0) return "-";
-  return openDays.join(', ');
+  return openDays.join(", ");
 };
 
 // Helper function to format hours of operation
 const formatHoursOfOperation = (hours: Business["hours_of_operation"]) => {
-  if (!hours || typeof hours === 'string') return "-";
+  if (!hours || typeof hours === "string") return "-";
   return String(hours);
 };
 
@@ -50,27 +61,38 @@ const BusinessPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [memberFilter, setMemberFilter] = useState<string>("all");
-  const [selectedBusinesses, setSelectedBusinesses] = useState<Set<string>>(new Set());
+  const [selectedBusinesses, setSelectedBusinesses] = useState<Set<string>>(
+    new Set(),
+  );
   const [selectAll, setSelectAll] = useState(false);
-  const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null);
+  const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(
+    null,
+  );
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [notificationDialogOpen, setNotificationDialogOpen] = useState(false);
   const [notificationTitle, setNotificationTitle] = useState("");
   const [notificationBody, setNotificationBody] = useState("");
   const [notificationSending, setNotificationSending] = useState(false);
-  const [notificationResult, setNotificationResult] = useState<{ success: boolean; sent: number; failed: number } | null>(null);
-  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
+  const [notificationResult, setNotificationResult] = useState<{
+    success: boolean;
+    sent: number;
+    failed: number;
+  } | null>(null);
+  const [sortConfig, setSortConfig] = useState<{
+    key: string;
+    direction: "asc" | "desc";
+  } | null>(null);
 
   const fetchBusinesses = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       const result = await getAllBusinesses("-created");
-      
+
       // Check if result has data (not cancelled)
       if (result.success && result.data) {
         setBusinesses(result.data);
-      } else if (result.error !== 'Request cancelled') {
+      } else if (result.error !== "Request cancelled") {
         setError(result.error || "Failed to fetch businesses");
       }
     } catch (err) {
@@ -82,15 +104,15 @@ const BusinessPage: React.FC = () => {
 
   useEffect(() => {
     let mounted = true;
-    
+
     const loadData = async () => {
       if (mounted) {
         await fetchBusinesses();
       }
     };
-    
+
     loadData();
-    
+
     return () => {
       mounted = false;
     };
@@ -115,37 +137,45 @@ const BusinessPage: React.FC = () => {
 
   // Filter businesses
   const filteredBusinesses = businesses.filter((business) => {
-    const matchesSearch = 
+    const phoneText = String(business.phone_number ?? "");
+    const matchesSearch =
       business.business_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       business.owner_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      business.email.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === "all" || 
+      business.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      phoneText.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesStatus =
+      statusFilter === "all" ||
       (statusFilter === "active" && business.Active) ||
       (statusFilter === "inactive" && !business.Active);
-    
-    const matchesCategory = categoryFilter === "all" || (typeof business.category === 'string' ? business.category === categoryFilter : business.category?.id === categoryFilter);
-    
-    const matchesMember = memberFilter === "all" || 
+
+    const matchesCategory =
+      categoryFilter === "all" ||
+      (typeof business.category === "string"
+        ? business.category === categoryFilter
+        : business.category?.id === categoryFilter);
+
+    const matchesMember =
+      memberFilter === "all" ||
       (memberFilter === "member" && business.isMember) ||
       (memberFilter === "non-member" && !business.isMember);
-    
+
     return matchesSearch && matchesStatus && matchesCategory && matchesMember;
   });
 
   // Apply sorting
   const sortedBusinesses = [...filteredBusinesses].sort((a, b) => {
     if (!sortConfig) return 0;
-    
+
     const { key, direction } = sortConfig;
-    const multiplier = direction === 'asc' ? 1 : -1;
-    
+    const multiplier = direction === "asc" ? 1 : -1;
+
     switch (key) {
-      case 'name':
+      case "name":
         return a.business_name.localeCompare(b.business_name) * multiplier;
-      case 'rating':
+      case "rating":
         return (a.average_rating - b.average_rating) * multiplier;
-      case 'views':
+      case "views":
         return (a.views - b.views) * multiplier;
       default:
         return 0;
@@ -157,7 +187,7 @@ const BusinessPage: React.FC = () => {
     if (selectAll) {
       setSelectedBusinesses(new Set());
     } else {
-      setSelectedBusinesses(new Set(filteredBusinesses.map(b => b.id)));
+      setSelectedBusinesses(new Set(filteredBusinesses.map((b) => b.id)));
     }
     setSelectAll(!selectAll);
   };
@@ -176,12 +206,16 @@ const BusinessPage: React.FC = () => {
 
   // Handle sorting
   const handleSort = (key: string) => {
-    let direction: 'asc' | 'desc' = 'asc';
-    
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
+    let direction: "asc" | "desc" = "asc";
+
+    if (
+      sortConfig &&
+      sortConfig.key === key &&
+      sortConfig.direction === "asc"
+    ) {
+      direction = "desc";
     }
-    
+
     setSortConfig({ key, direction });
   };
 
@@ -218,11 +252,13 @@ const BusinessPage: React.FC = () => {
     if (!notificationTitle.trim() || !notificationBody.trim()) return;
 
     setNotificationSending(true);
-    
+
     // Get selected businesses
-    const selectedBusinessList = filteredBusinesses.filter(b => selectedBusinesses.has(b.id));
+    const selectedBusinessList = filteredBusinesses.filter((b) =>
+      selectedBusinesses.has(b.id),
+    );
     const tokens = getSelectedBusinessTokens(selectedBusinessList);
-    
+
     if (tokens.length === 0) {
       setNotificationResult({ success: false, sent: 0, failed: 0 });
       setNotificationSending(false);
@@ -232,7 +268,7 @@ const BusinessPage: React.FC = () => {
     const result = await sendNotification(tokens, {
       title: notificationTitle,
       body: notificationBody,
-      data: { type: 'business_notification' },
+      data: { type: "business_notification" },
     });
 
     setNotificationResult(result);
@@ -264,7 +300,7 @@ const BusinessPage: React.FC = () => {
   return (
     <DefaultLayout>
       <Breadcrumb pageName="Business Owners" />
-      
+
       {loading ? (
         <div className="flex h-96 items-center justify-center">
           <div className="h-14 w-14 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
@@ -347,15 +383,17 @@ const BusinessPage: React.FC = () => {
                 Category
               </label>
               <select
-                  value={categoryFilter}
-                  onChange={(e) => setCategoryFilter(e.target.value)}
-                  className="w-full rounded-lg border border-stroke bg-transparent px-4 py-2.5 text-black outline-none focus:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
-                >
-                  <option value="all">All Categories</option>
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>{cat.name}</option>
-                  ))}
-                </select>
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="w-full rounded-lg border border-stroke bg-transparent px-4 py-2.5 text-black outline-none focus:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+              >
+                <option value="all">All Categories</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Member Filter */}
@@ -392,29 +430,40 @@ const BusinessPage: React.FC = () => {
 
           {/* Stats */}
           <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-4">
-            <div className="rounded-lg border border-stroke bg-gray-1 p-4 dark:border-strokedark dark:bg-meta-4">
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total Businesses</p>
+            <div className="bg-gray-1 rounded-lg border border-stroke p-4 dark:border-strokedark dark:bg-meta-4">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Total Businesses
+              </p>
               <p className="mt-1 text-2xl font-bold text-black dark:text-white">
                 {businesses.length}
               </p>
             </div>
-            <div className="rounded-lg border border-stroke bg-gray-1 p-4 dark:border-strokedark dark:bg-meta-4">
+            <div className="bg-gray-1 rounded-lg border border-stroke p-4 dark:border-strokedark dark:bg-meta-4">
               <p className="text-sm text-gray-500 dark:text-gray-400">Active</p>
               <p className="mt-1 text-2xl font-bold text-success">
                 {businesses.filter((b) => b.Active).length}
               </p>
             </div>
-            <div className="rounded-lg border border-stroke bg-gray-1 p-4 dark:border-strokedark dark:bg-meta-4">
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total Views</p>
+            <div className="bg-gray-1 rounded-lg border border-stroke p-4 dark:border-strokedark dark:bg-meta-4">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Total Views
+              </p>
               <p className="mt-1 text-2xl font-bold text-black dark:text-white">
-                {businesses.reduce((acc, b) => acc + b.views, 0).toLocaleString()}
+                {businesses
+                  .reduce((acc, b) => acc + b.views, 0)
+                  .toLocaleString()}
               </p>
             </div>
-            <div className="rounded-lg border border-stroke bg-gray-1 p-4 dark:border-strokedark dark:bg-meta-4">
-              <p className="text-sm text-gray-500 dark:text-gray-400">Avg Rating</p>
+            <div className="bg-gray-1 rounded-lg border border-stroke p-4 dark:border-strokedark dark:bg-meta-4">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Avg Rating
+              </p>
               <p className="mt-1 text-2xl font-bold text-black dark:text-white">
                 {businesses.length > 0
-                  ? (businesses.reduce((acc, b) => acc + b.average_rating, 0) / businesses.length).toFixed(1)
+                  ? (
+                      businesses.reduce((acc, b) => acc + b.average_rating, 0) /
+                      businesses.length
+                    ).toFixed(1)
                   : "0"}
               </p>
             </div>
@@ -422,7 +471,13 @@ const BusinessPage: React.FC = () => {
 
           {/* Table */}
           <div className="flex flex-col">
-            <div className="grid rounded-sm bg-gray-2 dark:bg-meta-4" style={{ gridTemplateColumns: '48px 1fr 120px 200px 100px 80px 70px 70px 100px' }}>
+            <div
+              className="grid rounded-sm bg-gray-2 dark:bg-meta-4"
+              style={{
+                gridTemplateColumns:
+                  "48px 1fr 120px 200px 100px 80px 70px 70px 100px",
+              }}
+            >
               <div className="flex items-center justify-center p-2 xl:p-3">
                 <input
                   type="checkbox"
@@ -433,57 +488,97 @@ const BusinessPage: React.FC = () => {
               </div>
               <div className="p-2.5 xl:p-4">
                 <button
-                  onClick={() => handleSort('name')}
-                  className="flex items-center gap-1 text-sm font-medium uppercase xsm:text-base hover:text-primary"
+                  onClick={() => handleSort("name")}
+                  className="flex items-center gap-1 text-sm font-medium uppercase hover:text-primary xsm:text-base"
                 >
                   Business
-                  {sortConfig?.key === 'name' && (
-                    <svg className={`h-4 w-4 transform ${sortConfig.direction === 'desc' ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                  {sortConfig?.key === "name" && (
+                    <svg
+                      className={`h-4 w-4 transform ${sortConfig.direction === "desc" ? "rotate-180" : ""}`}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 15l7-7 7 7"
+                      />
                     </svg>
                   )}
                 </button>
               </div>
               <div className="p-2.5 text-center xl:p-4">
-                <h5 className="text-sm font-medium uppercase xsm:text-base">Owner</h5>
+                <h5 className="text-sm font-medium uppercase xsm:text-base">
+                  Owner
+                </h5>
               </div>
               <div className="p-2.5 text-center xl:p-4">
-                <h5 className="text-sm font-medium uppercase xsm:text-base">Email</h5>
+                <h5 className="text-sm font-medium uppercase xsm:text-base">
+                  Email
+                </h5>
               </div>
               <div className="p-2.5 text-center xl:p-4">
-                <h5 className="text-sm font-medium uppercase xsm:text-base">Phone</h5>
+                <h5 className="text-sm font-medium uppercase xsm:text-base">
+                  Phone
+                </h5>
               </div>
               <div className="p-2.5 text-center xl:p-4">
-                <h5 className="text-sm font-medium uppercase xsm:text-base">Status</h5>
+                <h5 className="text-sm font-medium uppercase xsm:text-base">
+                  Status
+                </h5>
               </div>
               <div className="p-2.5 text-center xl:p-4">
                 <button
-                  onClick={() => handleSort('views')}
-                  className="flex items-center justify-center gap-1 text-sm font-medium uppercase xsm:text-base hover:text-primary"
+                  onClick={() => handleSort("views")}
+                  className="flex items-center justify-center gap-1 text-sm font-medium uppercase hover:text-primary xsm:text-base"
                 >
                   Views
-                  {sortConfig?.key === 'views' && (
-                    <svg className={`h-4 w-4 transform ${sortConfig.direction === 'desc' ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                  {sortConfig?.key === "views" && (
+                    <svg
+                      className={`h-4 w-4 transform ${sortConfig.direction === "desc" ? "rotate-180" : ""}`}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 15l7-7 7 7"
+                      />
                     </svg>
                   )}
                 </button>
               </div>
               <div className="p-2.5 text-center xl:p-4">
                 <button
-                  onClick={() => handleSort('rating')}
-                  className="flex items-center justify-center gap-1 text-sm font-medium uppercase xsm:text-base hover:text-primary"
+                  onClick={() => handleSort("rating")}
+                  className="flex items-center justify-center gap-1 text-sm font-medium uppercase hover:text-primary xsm:text-base"
                 >
                   Rating
-                  {sortConfig?.key === 'rating' && (
-                    <svg className={`h-4 w-4 transform ${sortConfig.direction === 'desc' ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                  {sortConfig?.key === "rating" && (
+                    <svg
+                      className={`h-4 w-4 transform ${sortConfig.direction === "desc" ? "rotate-180" : ""}`}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 15l7-7 7 7"
+                      />
                     </svg>
                   )}
                 </button>
               </div>
               <div className="p-2.5 text-center xl:p-4">
-                <h5 className="text-sm font-medium uppercase xsm:text-base">Joined</h5>
+                <h5 className="text-sm font-medium uppercase xsm:text-base">
+                  Joined
+                </h5>
               </div>
             </div>
 
@@ -500,13 +595,19 @@ const BusinessPage: React.FC = () => {
                     key === sortedBusinesses.length - 1
                       ? ""
                       : "border-b border-stroke dark:border-strokedark"
-                  } ${selectedBusinesses.has(business.id) ? 'bg-primary/5 dark:bg-primary/10' : ''}`}
+                  } ${selectedBusinesses.has(business.id) ? "bg-primary/5 dark:bg-primary/10" : ""}`}
                   key={business.id}
                   onClick={() => openBusinessDetails(business)}
-                  style={{ gridTemplateColumns: '48px 1fr 120px 200px 100px 80px 70px 70px 100px' }}
+                  style={{
+                    gridTemplateColumns:
+                      "48px 1fr 120px 200px 100px 80px 70px 70px 100px",
+                  }}
                 >
                   {/* Checkbox */}
-                  <div className="flex items-center justify-center p-2 xl:p-3" onClick={(e) => e.stopPropagation()}>
+                  <div
+                    className="flex items-center justify-center p-2 xl:p-3"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <input
                       type="checkbox"
                       checked={selectedBusinesses.has(business.id)}
@@ -612,10 +713,13 @@ const BusinessPage: React.FC = () => {
             className="fixed inset-0 z-50 bg-black/50"
             onClick={closeNotificationDialog}
           />
-          
+
           {/* Dialog Panel */}
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="w-full max-w-md rounded-lg bg-white dark:bg-boxdark shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div
+              className="w-full max-w-md rounded-lg bg-white shadow-xl dark:bg-boxdark"
+              onClick={(e) => e.stopPropagation()}
+            >
               {/* Header */}
               <div className="flex items-center justify-between border-b border-stroke px-6 py-4 dark:border-strokedark">
                 <h3 className="text-lg font-bold text-black dark:text-white">
@@ -625,18 +729,29 @@ const BusinessPage: React.FC = () => {
                   onClick={closeNotificationDialog}
                   className="text-gray-400 hover:text-black dark:hover:text-white"
                 >
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               </div>
-              
+
               {/* Content */}
               <div className="p-6">
                 <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
-                  Sending to {selectedBusinesses.size} selected business(es) with FCM tokens.
+                  Sending to {selectedBusinesses.size} selected business(es)
+                  with FCM tokens.
                 </p>
-                
+
                 {/* Title Input */}
                 <div className="mb-4">
                   <label className="mb-2 block text-sm font-medium text-black dark:text-white">
@@ -650,7 +765,7 @@ const BusinessPage: React.FC = () => {
                     className="w-full rounded-lg border border-stroke bg-transparent px-4 py-2.5 text-black outline-none focus:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
                   />
                 </div>
-                
+
                 {/* Body Input */}
                 <div className="mb-4">
                   <label className="mb-2 block text-sm font-medium text-black dark:text-white">
@@ -664,20 +779,21 @@ const BusinessPage: React.FC = () => {
                     className="w-full rounded-lg border border-stroke bg-transparent px-4 py-2.5 text-black outline-none focus:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
                   />
                 </div>
-                
+
                 {/* Result */}
                 {notificationResult && (
-                  <div className={`mb-4 rounded-lg p-3 ${notificationResult.success ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'}`}>
+                  <div
+                    className={`mb-4 rounded-lg p-3 ${notificationResult.success ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}
+                  >
                     <p className="text-sm">
                       {notificationResult.success
-                        ? `Successfully sent to ${notificationResult.sent} device(s)${notificationResult.failed > 0 ? `, ${notificationResult.failed} failed` : ''}`
-                        : `Failed to send. Sent: ${notificationResult.sent}, Failed: ${notificationResult.failed}`
-                      }
+                        ? `Successfully sent to ${notificationResult.sent} device(s)${notificationResult.failed > 0 ? `, ${notificationResult.failed} failed` : ""}`
+                        : `Failed to send. Sent: ${notificationResult.sent}, Failed: ${notificationResult.failed}`}
                     </p>
                   </div>
                 )}
               </div>
-              
+
               {/* Footer */}
               <div className="flex gap-3 border-t border-stroke px-6 py-4 dark:border-strokedark">
                 <button
@@ -688,10 +804,14 @@ const BusinessPage: React.FC = () => {
                 </button>
                 <button
                   onClick={handleSendNotification}
-                  disabled={notificationSending || !notificationTitle.trim() || !notificationBody.trim()}
+                  disabled={
+                    notificationSending ||
+                    !notificationTitle.trim() ||
+                    !notificationBody.trim()
+                  }
                   className="flex-1 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {notificationSending ? 'Sending...' : 'Send'}
+                  {notificationSending ? "Sending..." : "Send"}
                 </button>
               </div>
             </div>
@@ -707,9 +827,9 @@ const BusinessPage: React.FC = () => {
             className="fixed inset-0 z-40 bg-black/50 transition-opacity"
             onClick={closeModal}
           />
-          
+
           {/* Modal Panel */}
-          <div className="fixed inset-y-0 right-0 z-50 w-full max-w-md overflow-y-auto bg-white dark:bg-boxdark shadow-xl transition-transform">
+          <div className="fixed inset-y-0 right-0 z-50 w-full max-w-md overflow-y-auto bg-white shadow-xl transition-transform dark:bg-boxdark">
             <div className="flex h-full flex-col">
               {/* Header */}
               <div className="flex items-center justify-between border-b border-stroke px-6 py-4 dark:border-strokedark">
@@ -775,19 +895,25 @@ const BusinessPage: React.FC = () => {
                     </h5>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Owner Name</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Owner Name
+                        </p>
                         <p className="text-sm font-medium text-black dark:text-white">
                           {selectedBusiness.owner_name}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Phone</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Phone
+                        </p>
                         <p className="text-sm font-medium text-black dark:text-white">
                           {selectedBusiness.phone_number}
                         </p>
                       </div>
                       <div className="col-span-2">
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Email</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Email
+                        </p>
                         <p className="text-sm font-medium text-black dark:text-white">
                           {selectedBusiness.email}
                         </p>
@@ -802,25 +928,33 @@ const BusinessPage: React.FC = () => {
                     </h5>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Category</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Category
+                        </p>
                         <p className="text-sm font-medium text-black dark:text-white">
-                          {( selectedBusiness.expand.category.name || "-")}
+                          {selectedBusiness?.expand?.category?.name || "-"}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Business Type</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Business Type
+                        </p>
                         <p className="text-sm font-medium text-black dark:text-white">
                           {selectedBusiness.business_type || "-"}
                         </p>
                       </div>
                       <div className="col-span-2">
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Address</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Address
+                        </p>
                         <p className="text-sm font-medium text-black dark:text-white">
                           {formatAddress(selectedBusiness.address)}
                         </p>
                       </div>
                       <div className="col-span-2">
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Location</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Location
+                        </p>
                         <p className="text-sm font-medium text-black dark:text-white">
                           {formatLocation(selectedBusiness.location)}
                         </p>
@@ -835,16 +969,25 @@ const BusinessPage: React.FC = () => {
                     </h5>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="col-span-2">
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Contact Email</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Contact Email
+                        </p>
                         <p className="text-sm font-medium text-black dark:text-white">
                           {selectedBusiness.contact_email || "-"}
                         </p>
                       </div>
                       <div className="col-span-2">
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Website</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Website
+                        </p>
                         <p className="text-sm font-medium text-black dark:text-white">
                           {selectedBusiness.website ? (
-                            <a href={selectedBusiness.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                            <a
+                              href={selectedBusiness.website}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary hover:underline"
+                            >
                               {selectedBusiness.website}
                             </a>
                           ) : (
@@ -862,15 +1005,23 @@ const BusinessPage: React.FC = () => {
                     </h5>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Days of Operation</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Days of Operation
+                        </p>
                         <p className="text-sm font-medium text-black dark:text-white">
-                          {formatDaysOfOperation(selectedBusiness.days_of_operation)}
+                          {formatDaysOfOperation(
+                            selectedBusiness.days_of_operation,
+                          )}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Hours of Operation</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Hours of Operation
+                        </p>
                         <p className="text-sm font-medium text-black dark:text-white">
-                          {formatHoursOfOperation(selectedBusiness.hours_of_operation)}
+                          {formatHoursOfOperation(
+                            selectedBusiness.hours_of_operation,
+                          )}
                         </p>
                       </div>
                     </div>
@@ -883,25 +1034,33 @@ const BusinessPage: React.FC = () => {
                     </h5>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Views</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Views
+                        </p>
                         <p className="text-lg font-bold text-black dark:text-white">
                           {selectedBusiness.views.toLocaleString()}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Average Rating</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Average Rating
+                        </p>
                         <p className="text-lg font-bold text-black dark:text-white">
                           {selectedBusiness.average_rating.toFixed(1)}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Minutes Visited</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Minutes Visited
+                        </p>
                         <p className="text-lg font-bold text-black dark:text-white">
                           {selectedBusiness.minutes_visited}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Member Status</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Member Status
+                        </p>
                         <p className="text-sm font-medium text-black dark:text-white">
                           {selectedBusiness.isMember ? "Yes" : "No"}
                         </p>
@@ -910,25 +1069,29 @@ const BusinessPage: React.FC = () => {
                   </div>
 
                   {/* Images */}
-                  {selectedBusiness.images && selectedBusiness.images.length > 0 && (
-                    <div className="rounded-lg border border-stroke p-4 dark:border-strokedark">
-                      <h5 className="mb-3 text-sm font-semibold uppercase text-black dark:text-white">
-                        Business Images
-                      </h5>
-                      <div className="grid grid-cols-3 gap-2">
-                        {selectedBusiness.images.map((img, idx) => (
-                          <div key={idx} className="relative aspect-square overflow-hidden rounded-lg">
-                            <Image
-                              src={`${POCKETBASE_URL}/api/files/${selectedBusiness.collectionId}/${selectedBusiness.id}/${img}`}
-                              alt={`${selectedBusiness.business_name} ${idx + 1}`}
-                              fill
-                              className="object-cover"
-                            />
-                          </div>
-                        ))}
+                  {selectedBusiness.images &&
+                    selectedBusiness.images.length > 0 && (
+                      <div className="rounded-lg border border-stroke p-4 dark:border-strokedark">
+                        <h5 className="mb-3 text-sm font-semibold uppercase text-black dark:text-white">
+                          Business Images
+                        </h5>
+                        <div className="grid grid-cols-3 gap-2">
+                          {selectedBusiness.images.map((img, idx) => (
+                            <div
+                              key={idx}
+                              className="relative aspect-square overflow-hidden rounded-lg"
+                            >
+                              <Image
+                                src={`${POCKETBASE_URL}/api/files/${selectedBusiness.collectionId}/${selectedBusiness.id}/${img}`}
+                                alt={`${selectedBusiness.business_name} ${idx + 1}`}
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
                   {/* Timestamps */}
                   <div className="rounded-lg border border-stroke p-4 dark:border-strokedark">
@@ -937,13 +1100,17 @@ const BusinessPage: React.FC = () => {
                     </h5>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Created</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Created
+                        </p>
                         <p className="text-sm font-medium text-black dark:text-white">
                           {formatDate(selectedBusiness.created)}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Last Updated</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Last Updated
+                        </p>
                         <p className="text-sm font-medium text-black dark:text-white">
                           {formatDate(selectedBusiness.updated)}
                         </p>
@@ -957,7 +1124,7 @@ const BusinessPage: React.FC = () => {
               <div className="border-t border-stroke px-6 py-4 dark:border-strokedark">
                 <button
                   onClick={closeModal}
-                  className="w-full rounded-lg border border-stroke bg-gray-1 px-4 py-2 text-sm font-medium text-black hover:bg-gray-2 dark:border-strokedark dark:bg-meta-4 dark:text-white"
+                  className="bg-gray-1 w-full rounded-lg border border-stroke px-4 py-2 text-sm font-medium text-black hover:bg-gray-2 dark:border-strokedark dark:bg-meta-4 dark:text-white"
                 >
                   Close
                 </button>

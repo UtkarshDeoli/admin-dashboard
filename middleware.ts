@@ -3,6 +3,19 @@ import { NextRequest, NextResponse } from "next/server";
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  const isPublicFile = /\.[^/]+$/.test(pathname);
+
+  if (
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/images") ||
+    pathname.startsWith("/public") ||
+    pathname.startsWith("/fonts") ||
+    pathname.startsWith("/icons") ||
+    isPublicFile
+  ) {
+    return NextResponse.next();
+  }
+
   // Allow auth routes
   if (
     pathname.startsWith("/auth/signin") ||
@@ -21,17 +34,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Allow only business and users routes
-  if (
-    pathname === "/" ||
-    pathname.startsWith("/business") ||
-    pathname.startsWith("/users")
-  ) {
-    return NextResponse.next();
-  }
-
-  // Block all other routes - redirect to business
-  return NextResponse.redirect(new URL("/business", request.url));
+  return NextResponse.next();
 }
 
 export const config = {
