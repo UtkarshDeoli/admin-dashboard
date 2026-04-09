@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "build:docker": "docker buildx build --platform linux/amd64 -t utkarshdeoli/city-sync:latest --push .",
     "deploy:docker": "ssh -i ~/.ssh/city_sync_gcloud utkarsh@34.180.34.186 'docker pull utkarshdeoli/city-sync:latest && docker stop city-sync 2>/dev/null || true && docker rm -f city-sync 2>/dev/null || true && docker kill $(docker ps -q -f ancestor=utkarshdeoli/city-sync) 2>/dev/null || true && docker run -d --name city-sync --restart unless-stopped -p 3000:3000 utkarshdeoli/city-sync:latest && docker image prune -f'"
   },
